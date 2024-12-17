@@ -78,24 +78,16 @@ void main(void) {
     
     // Prepare file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
+    string debugFile = filedir(argv[0]) + "debug.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
     // Generate QR code using GitHub-hosted HTML file
     string browserCmd;
     string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
     
-    // Try Unix command - if it fails, assume Windows
-    string testCmd = "which curl";
-    string testResult;
-    int isUnix = (system(testCmd, testResult) == 0);
-    
-    if (isUnix) {  // Unix-like system (Mac/Linux)
-        sprintf(browserCmd, "curl -s \"%s?url=%s&size=%d\" > \"%s\"", githubUrl, Url, Size, tmpFile);
-    } else {  // Windows
-        sprintf(browserCmd, "powershell -command \"(Invoke-WebRequest -Uri \\\"%s?url=%s&size=%d\\\").Content\" > \"%s\"", 
-                githubUrl, Url, Size, tmpFile);
-    }
-    
+    // Use curl command (for Mac/Unix systems) and save debug info
+    sprintf(browserCmd, "curl -v \"%s?url=%s&size=%d\" 2>%s > \"%s\"", 
+            githubUrl, Url, Size, debugFile, tmpFile);
     system(browserCmd);
     
     // Read QR code data
@@ -103,8 +95,11 @@ void main(void) {
     int nLines = fileread(lines, tmpFile);
     
     if (nLines <= 0) {
-        dlgMessageBox("Error: Could not generate QR code. Please check your internet connection.");
+        string debugLines[];
+        fileread(debugLines, debugFile);
+        dlgMessageBox("Error: Could not generate QR code.\nDebug info:\n" + debugLines[0]);
         system("rm \"" + tmpFile + "\"");
+        system("rm \"" + debugFile + "\"");
         exit(1);
     }
     
@@ -132,5 +127,6 @@ void main(void) {
     
     // Clean up and execute
     system("rm \"" + tmpFile + "\"");
+    system("rm \"" + debugFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
