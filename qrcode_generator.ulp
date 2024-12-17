@@ -80,24 +80,14 @@ void main(void) {
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string debugFile = filedir(argv[0]) + "debug.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
-    string downloadFile = "~/Downloads/qr_matrix.txt";  // Default download location
     
     // Generate QR code using GitHub-hosted HTML file
     string browserCmd;
     string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
     
-    // First, download the HTML file
-    string htmlFile = filedir(argv[0]) + "qr_generator.html";
-    sprintf(browserCmd, "curl -s \"%s\" > \"%s\"", githubUrl, htmlFile);
-    system(browserCmd);
-    
-    // Open in default browser and wait for download
-    sprintf(browserCmd, "open \"file://%s?url=%s&size=%d\"", htmlFile, Url, Size);
-    system(browserCmd);
-    
-    // Wait for download and copy to temp file
-    system("sleep 2");  // Wait for download
-    sprintf(browserCmd, "cp \"%s\" \"%s\"", downloadFile, tmpFile);
+    // Use curl to fetch the QR code directly (like the Python server did)
+    sprintf(browserCmd, "curl -s \"file://%s?url=%s&size=%d\" > \"%s\"", 
+            githubUrl, Url, Size, tmpFile);
     system(browserCmd);
     
     // Read QR code data
