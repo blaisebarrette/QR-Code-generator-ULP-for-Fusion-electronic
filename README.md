@@ -9,6 +9,7 @@ A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Ele
 - Support for multiple layers (Silkscreen, Documentation)
 - Customizable size (250-5000 mils)
 - Manual positioning with X,Y coordinates
+- Cloud-based generation using PythonAnywhere
 - No local installation required
 
 ## Installation
@@ -49,7 +50,7 @@ The QR code is automatically positioned to avoid conflicts with your design:
 
 ## Technical Notes
 
-- QR code is generated via a secure cloud service
+- QR code is generated via a secure cloud service (PythonAnywhere)
 - Minimum size: 250 mils
 - Maximum size: 5000 mils
 - Positioning range: -50000 to +50000 mils

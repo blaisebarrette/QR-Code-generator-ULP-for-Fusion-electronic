@@ -82,7 +82,7 @@ void main(void) {
     
     // Generate QR code using server
     string curlCmd;
-    sprintf(curlCmd, "curl -s \"http://localhost:5001/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
+    sprintf(curlCmd, "curl -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
     system(curlCmd);
     
     // Read QR code data
@@ -90,7 +90,7 @@ void main(void) {
     int nLines = fileread(lines, tmpFile);
     
     if (nLines <= 0) {
-        dlgMessageBox("Error: Could not read QR code data!");
+        dlgMessageBox("Error: Could not generate QR code. Please check your internet connection.");
         system("rm \"" + tmpFile + "\"");
         exit(1);
     }
