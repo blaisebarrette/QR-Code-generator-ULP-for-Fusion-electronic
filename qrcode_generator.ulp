@@ -1,0 +1,123 @@
+// QR Code Generator for Eagle/Fusion Electronics
+// This ULP generates QR codes directly on PCB layers
+
+#usage "en: QR Code Generator\n"
+       "Generate QR codes directly on PCB layers.\n"
+       "Usage: Run the ULP and specify URL, layer, and size."
+
+#require 4.11
+
+// Global variables
+int PosX, PosY;
+
+// Function to calculate default position based on size
+void updateDefaultPosition(int size) {
+    PosX = -(size + 1000);
+    PosY = -(size + 1000);
+}
+
+void main(void) {
+    // Initialize variables
+    string Url = "";
+    int Size = 500;
+    
+    // Layer selection (simplified to most commonly used layers)
+    string LayerNames[] = {
+        "Top Silkscreen (tPlace)",
+        "Bottom Silkscreen (bPlace)",
+        "Top Documentation (tDocu)"
+    };
+    int LayerNumbers[] = {21, 22, 51};
+    int SelectedLayer = 0;
+    
+    // Initialize default positions
+    updateDefaultPosition(Size);
+    
+    // Dialog for input
+    if (!dlgDialog("QR Code Generator") {
+        dlgHBoxLayout {
+            dlgVBoxLayout {
+                dlgGroup("QR Code Settings") {
+                    dlgLabel("Enter the URL for your QR code:");
+                    dlgStringEdit(Url);
+                    dlgSpacing(10);
+                    dlgLabel("Enter size in mils (250-5000):");
+                    dlgHBoxLayout {
+                        dlgSpinBox(Size, 250, 5000);
+                        dlgPushButton("Update Position") {
+                            updateDefaultPosition(Size);
+                            dlgRedisplay();
+                        }
+                    }
+                    dlgSpacing(10);
+                    dlgLabel("Select layer:");
+                    dlgComboBox(LayerNames, SelectedLayer);
+                    dlgSpacing(10);
+                    dlgGroup("Position (mils)") {
+                        dlgHBoxLayout {
+                            dlgLabel("X:");
+                            dlgSpinBox(PosX, -50000, 50000);
+                            dlgLabel("Y:");
+                            dlgSpinBox(PosY, -50000, 50000);
+                        }
+                    }
+                }
+                dlgSpacing(10);
+                dlgHBoxLayout {
+                    dlgStretch(1);
+                    dlgPushButton("+OK") dlgAccept();
+                    dlgPushButton("-Cancel") dlgReject();
+                    dlgStretch(1);
+                }
+            }
+        }
+    } || Url == "") {
+        dlgMessageBox("No URL provided. Operation cancelled.");
+        exit(0);
+    }
+    
+    // Prepare file paths
+    string tmpFile = filedir(argv[0]) + "qr_temp.txt";
+    string scriptFile = filedir(argv[0]) + "qr_script.scr";
+    
+    // Generate QR code using server
+    string curlCmd;
+    sprintf(curlCmd, "curl -s \"http://localhost:5001/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
+    system(curlCmd);
+    
+    // Read QR code data
+    string lines[];
+    int nLines = fileread(lines, tmpFile);
+    
+    if (nLines <= 0) {
+        dlgMessageBox("Error: Could not read QR code data!");
+        system("rm \"" + tmpFile + "\"");
+        exit(1);
+    }
+    
+    // Generate Eagle script
+    output(scriptFile, "wt") {
+        printf("GRID MIL;\n");
+        printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
+        printf("SET WIRE_BEND 2;\n");
+        
+        // Create rectangles for QR code
+        int moduleSize = Size / 21;
+        for (int row = 0; row < nLines; row++) {
+            string line = lines[row];
+            for (int col = 0; col < strlen(line); col++) {
+                if (line[col] == '1') {
+                    int x1 = PosX + col * moduleSize - (Size/2);
+                    int y1 = PosY + row * moduleSize - (Size/2);
+                    int x2 = PosX + (col + 1) * moduleSize - (Size/2);
+                    int y2 = PosY + (row + 1) * moduleSize - (Size/2);
+                    printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
+                }
+            }
+        }
+    }
+    
+    // Clean up and execute
+    system("rm \"" + tmpFile + "\"");
+    exit("SCRIPT '" + scriptFile + "'");
+} 
