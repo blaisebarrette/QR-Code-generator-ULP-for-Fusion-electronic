@@ -1,71 +1,71 @@
 # QR Code Generator ULP for Fusion Electronics
 
-Un outil simple et efficace pour générer des QR codes directement dans Eagle/Fusion360 Electronics.
+A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Electronics.
 
-## Caractéristiques
+## Features
 
-- Génération de QR codes à partir d'URLs
-- Placement automatique intelligent sur le PCB
-- Support de plusieurs couches (Silkscreen, Documentation)
-- Taille personnalisable (250-5000 mils)
-- Positionnement manuel possible avec coordonnées X,Y
-- Aucune installation locale requise
+- QR code generation from URLs
+- Smart automatic placement on PCB
+- Support for multiple layers (Silkscreen, Documentation)
+- Customizable size (250-5000 mils)
+- Manual positioning with X,Y coordinates
+- No local installation required
 
 ## Installation
 
-1. Téléchargez le fichier `qrcode_generator.ulp`
-2. Placez-le dans un dossier accessible
+1. Download the `qrcode_generator.ulp` file
+2. Place it in an accessible folder
 
-C'est tout ! Pas besoin d'installer Python ou d'autres dépendances.
+That's it! No need to install Python or other dependencies.
 
-## Utilisation
+## Usage
 
-1. Dans Eagle/Fusion360 Electronics, ouvrez votre design PCB
-2. Exécutez le script ULP :
-   - Dans Eagle : `File > Run ULP > qrcode_generator.ulp`
-   - Dans Fusion360 : `Tools > Run ULP > qrcode_generator.ulp`
+1. In Eagle/Fusion360 Electronics, open your PCB design
+2. Run the ULP script:
+   - In Eagle: `File > Run ULP > qrcode_generator.ulp`
+   - In Fusion360: `Tools > Run ULP > qrcode_generator.ulp`
 
-3. Dans la fenêtre qui s'ouvre :
-   - Entrez l'URL pour votre QR code
-   - Choisissez la taille (en mils)
-   - Sélectionnez la couche de destination
-   - La position par défaut sera calculée automatiquement
-   - Vous pouvez ajuster la position manuellement si nécessaire
+3. In the dialog window:
+   - Enter the URL for your QR code
+   - Choose the size (in mils)
+   - Select the destination layer
+   - Default position will be calculated automatically
+   - You can adjust the position manually if needed
 
-4. Cliquez sur OK pour générer le QR code
+4. Click OK to generate the QR code
 
-## Couches Supportées
+## Supported Layers
 
 - Top Silkscreen (tPlace)
 - Bottom Silkscreen (bPlace)
 - Top Documentation (tDocu)
 
-## Position Automatique
+## Automatic Positioning
 
-Le QR code est automatiquement positionné pour éviter les conflits avec votre design :
-- Position par défaut = -(taille + 1000) en X et Y
-- Exemple : Pour un QR code de 500 mils, position = -1500,-1500
-- Cette position peut être ajustée avec le bouton "Update Position"
+The QR code is automatically positioned to avoid conflicts with your design:
+- Default position = -(size + 1000) in X and Y
+- Example: For a 500 mils QR code, position = -1500,-1500
+- This position can be adjusted with the "Update Position" button
 
-## Notes Techniques
+## Technical Notes
 
-- Le QR code est généré via un service cloud sécurisé
-- Taille minimale : 250 mils
-- Taille maximale : 5000 mils
-- Plage de positionnement : -50000 à +50000 mils
+- QR code is generated via a secure cloud service
+- Minimum size: 250 mils
+- Maximum size: 5000 mils
+- Positioning range: -50000 to +50000 mils
 
-## Contribution
+## Contributing
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-- Signaler des bugs
-- Proposer des améliorations
-- Soumettre des pull requests
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest improvements
+- Submit pull requests
 
-## Licence
+## License
 
-Ce projet est sous licence MIT.
+This project is licensed under the MIT License.
 
-## Auteurs
+## Authors
 
-- Blaise Barrette - Conception et développement initial
-- Avec l'aide de l'équipe Cursor AI
+- Blaise Barrette - Initial design and development
+- With help from the Cursor AI team
