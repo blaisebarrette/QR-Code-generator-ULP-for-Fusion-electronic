@@ -80,10 +80,19 @@ void main(void) {
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using server
-    string curlCmd;
-    sprintf(curlCmd, "curl -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
-    system(curlCmd);
+    // Generate QR code using GitHub-hosted HTML file
+    string browserCmd;
+    string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
+    
+    // Different commands for different operating systems
+    #ifdef UNIX
+        sprintf(browserCmd, "curl -s \"%s?url=%s&size=%d\" > \"%s\"", githubUrl, Url, Size, tmpFile);
+    #else
+        sprintf(browserCmd, "powershell -command \"(Invoke-WebRequest -Uri \\\"%s?url=%s&size=%d\\\").Content\" > \"%s\"", 
+                githubUrl, Url, Size, tmpFile);
+    #endif
+    
+    system(browserCmd);
     
     // Read QR code data
     string lines[];
