@@ -9,15 +9,15 @@ A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Ele
 - Support for multiple layers (Silkscreen, Documentation)
 - Customizable size (250-5000 mils)
 - Manual positioning with X,Y coordinates
-- Cloud-based generation using PythonAnywhere
-- No local installation required
+- Pure JavaScript-based generation
+- Works offline after initial load
 
 ## Installation
 
 1. Download the `qrcode_generator.ulp` file
 2. Place it in an accessible folder
 
-That's it! No need to install Python or other dependencies.
+That's it! No additional files needed.
 
 ## Usage
 
@@ -50,10 +50,11 @@ The QR code is automatically positioned to avoid conflicts with your design:
 
 ## Technical Notes
 
-- QR code is generated via a secure cloud service (PythonAnywhere)
+- QR code is generated using pure JavaScript (qrcode.js library)
 - Minimum size: 250 mils
 - Maximum size: 5000 mils
 - Positioning range: -50000 to +50000 mils
+- Internet connection required only for first use to load the QR code library
 
 ## Contributing
 
@@ -69,4 +70,3 @@ This project is licensed under the MIT License.
 ## Authors
 
 - Blaise Barrette - Initial design and development
-- With help from the Cursor AI team

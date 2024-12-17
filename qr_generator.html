@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const url = urlParams.get('url');
+        const size = parseInt(urlParams.get('size')) || 1000;
+
+        if (url) {
+            // Create QR Code
+            const qr = qrcode(0, 'L');
+            qr.addData(url);
+            qr.make();
+
+            // Get the QR code matrix
+            const moduleCount = qr.getModuleCount();
+            const matrix = [];
+            
+            // Convert to 1s and 0s format
+            for (let row = 0; row < moduleCount; row++) {
+                let line = '';
+                for (let col = 0; col < moduleCount; col++) {
+                    line += qr.isDark(row, col) ? '1' : '0';
+                }
+                matrix.push(line);
+            }
+
+            // Output as plain text
+            document.body.style.whiteSpace = 'pre';
+            document.body.textContent = matrix.join('\n');
+        }
+    </script>
+</body>
+</html> 
