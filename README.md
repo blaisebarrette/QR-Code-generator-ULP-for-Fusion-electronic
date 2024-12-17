@@ -1,72 +1,25 @@
 # QR Code Generator ULP for Fusion Electronics
 
-A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Electronics.
+A User Language Program (ULP) for generating QR codes in Autodesk Fusion Electronics (formerly Eagle).
 
-## Features
-
-- QR code generation from URLs
-- Smart automatic placement on PCB
-- Support for multiple layers (Silkscreen, Documentation)
-- Customizable size (250-5000 mils)
-- Manual positioning with X,Y coordinates
-- Pure JavaScript-based generation
-- Works offline after initial load
+## Requirements
+- curl (usually pre-installed on Mac/Linux)
+- Internet connection (to access the QR code generator)
 
 ## Installation
-
-1. Download the `qrcode_generator.ulp` file
-2. Place it in an accessible folder
-
-That's it! No additional files needed.
+1. Download `qrcode_generator.ulp`
+2. Place it in your ULP directory or any accessible location
 
 ## Usage
+1. Run the ULP in Fusion Electronics
+2. Enter the URL you want to encode
+3. Select size and layer
+4. Position the QR code as needed
+5. Click OK to generate
 
-1. In Eagle/Fusion360 Electronics, open your PCB design
-2. Run the ULP script:
-   - In Eagle: `File > Run ULP > qrcode_generator.ulp`
-   - In Fusion360: `Tools > Run ULP > qrcode_generator.ulp`
+## How it Works
+The ULP uses a web-based QR code generator to create the matrix, then converts it to rectangles in your PCB design.
 
-3. In the dialog window:
-   - Enter the URL for your QR code
-   - Choose the size (in mils)
-   - Select the destination layer
-   - Default position will be calculated automatically
-   - You can adjust the position manually if needed
-
-4. Click OK to generate the QR code
-
-## Supported Layers
-
-- Top Silkscreen (tPlace)
-- Bottom Silkscreen (bPlace)
-- Top Documentation (tDocu)
-
-## Automatic Positioning
-
-The QR code is automatically positioned to avoid conflicts with your design:
-- Default position = -(size + 1000) in X and Y
-- Example: For a 500 mils QR code, position = -1500,-1500
-- This position can be adjusted with the "Update Position" button
-
-## Technical Notes
-
-- QR code is generated using pure JavaScript (qrcode.js library)
-- Minimum size: 250 mils
-- Maximum size: 5000 mils
-- Positioning range: -50000 to +50000 mils
-- Internet connection required only for first use to load the QR code library
-
-## Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest improvements
-- Submit pull requests
-
-## License
-
-This project is licensed under the MIT License.
-
-## Authors
-
-- Blaise Barrette - Initial design and development
+## Files
+- `qrcode_generator.ulp` - Main ULP file
+- `qr_generator.html` - Web-based QR code generator

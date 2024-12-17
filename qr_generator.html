@@ -1,39 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>QR Code Generator</title>
+    <meta http-equiv="Content-Type" content="text/plain; charset=utf-8">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 </head>
-<body>
-    <script>
-        // Set content type to plain text immediately
-        document.contentType = 'text/plain';
-        
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const url = decodeURIComponent(urlParams.get('url'));
-        const size = parseInt(urlParams.get('size')) || 1000;
+<body><pre><script>
+// Get URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const url = decodeURIComponent(urlParams.get('url'));
+const size = parseInt(urlParams.get('size')) || 1000;
 
-        if (url) {
-            try {
-                // Create QR Code
-                const qr = qrcode(1, 'L');
-                qr.addData(url);
-                qr.make();
+if (url) {
+    // Create QR Code
+    const qr = qrcode(1, 'L');
+    qr.addData(url);
+    qr.make();
 
-                // Get the matrix and output directly
-                const moduleCount = qr.getModuleCount();
-                for (let row = 0; row < moduleCount; row++) {
-                    let line = '';
-                    for (let col = 0; col < moduleCount; col++) {
-                        line += qr.isDark(row, col) ? '1' : '0';
-                    }
-                    document.write(line + '\n');
-                }
-            } catch (error) {
-                document.write('ERROR: ' + error.message);
-            }
+    // Get the matrix and output directly
+    const moduleCount = qr.getModuleCount();
+    let output = '';
+    for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount; col++) {
+            output += qr.isDark(row, col) ? '1' : '0';
         }
-    </script>
-</body>
+        output += '\n';
+    }
+    document.write(output);
+}
+</script></pre></body>
 </html> 

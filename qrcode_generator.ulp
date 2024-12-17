@@ -81,14 +81,14 @@ void main(void) {
     string debugFile = filedir(argv[0]) + "debug.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using GitHub-hosted HTML file
-    string browserCmd;
-    string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
+    // Generate QR code using hosted HTML file
+    string cmd;
+    string url = "https://blaisebarrette.com/ulp_qrcode_generator/qr_generator.html";
     
-    // Use curl to fetch the QR code directly (like the Python server did)
-    sprintf(browserCmd, "curl -s \"file://%s?url=%s&size=%d\" > \"%s\"", 
-            githubUrl, Url, Size, tmpFile);
-    system(browserCmd);
+    // Use curl to fetch the QR code directly
+    sprintf(cmd, "curl -s -H 'Accept: text/plain' \"%s?url=%s&size=%d\" > \"%s\" 2>%s", 
+            url, Url, Size, tmpFile, debugFile);
+    system(cmd);
     
     // Read QR code data
     string lines[];
