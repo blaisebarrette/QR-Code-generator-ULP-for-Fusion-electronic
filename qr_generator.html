@@ -40,7 +40,15 @@
                     throw new Error('Invalid matrix height');
                 }
 
-                // Output as plain text
+                // Output debug info first
+                const debugInfo = [
+                    `URL: ${url}`,
+                    `Module Count: ${moduleCount}`,
+                    `Matrix Size: ${matrix.length}x${matrix[0].length}`,
+                    '---QR Code Matrix---'
+                ].join('\n');
+
+                // Output as plain text with debug info
                 document.body.style.whiteSpace = 'pre';
                 document.body.textContent = matrix.join('\n');
             } catch (error) {

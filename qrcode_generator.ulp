@@ -94,10 +94,18 @@ void main(void) {
     string lines[];
     int nLines = fileread(lines, tmpFile);
     
-    if (nLines <= 0) {
+    // Debug: Print the QR code data
+    output(debugFile, "wt") {
+        printf("Number of lines: %d\n", nLines);
+        for (int i = 0; i < nLines; i++) {
+            printf("Line %d (length %d): %s\n", i, strlen(lines[i]), lines[i]);
+        }
+    }
+    
+    if (nLines <= 0 || nLines != 21) {  // We expect exactly 21 lines
         string debugLines[];
         fileread(debugLines, debugFile);
-        dlgMessageBox("Error: Could not generate QR code.\nDebug info:\n" + debugLines[0]);
+        dlgMessageBox("Error: Invalid QR code data.\nDebug info:\n" + debugLines[0]);
         system("rm \"" + tmpFile + "\"");
         system("rm \"" + debugFile + "\"");
         exit(1);
