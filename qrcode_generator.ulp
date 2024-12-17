@@ -85,9 +85,14 @@ void main(void) {
     string browserCmd;
     string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
     
-    // Use curl command (for Mac/Unix systems) and save debug info
-    sprintf(browserCmd, "curl -v \"%s?url=%s&size=%d\" 2>%s > \"%s\"", 
-            githubUrl, Url, Size, debugFile, tmpFile);
+    // First, download the HTML file
+    string htmlFile = filedir(argv[0]) + "qr_generator.html";
+    sprintf(browserCmd, "curl -s \"%s\" > \"%s\"", githubUrl, htmlFile);
+    system(browserCmd);
+    
+    // Then use curl to fetch the local file output
+    sprintf(browserCmd, "curl -s \"file://%s?url=%s&size=%d\" > \"%s\"", 
+            htmlFile, Url, Size, tmpFile);
     system(browserCmd);
     
     // Read QR code data

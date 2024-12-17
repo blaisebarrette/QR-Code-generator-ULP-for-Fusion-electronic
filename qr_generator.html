@@ -22,37 +22,30 @@
                 const moduleCount = qr.getModuleCount();
                 const matrix = [];
                 
-                // Convert to 1s and 0s format, ensuring consistent width
+                // Convert to 1s and 0s format
                 for (let row = 0; row < moduleCount; row++) {
                     let line = '';
                     for (let col = 0; col < moduleCount; col++) {
                         line += qr.isDark(row, col) ? '1' : '0';
                     }
-                    // Ensure each line is exactly moduleCount characters
-                    if (line.length !== moduleCount) {
-                        throw new Error('Invalid line length');
-                    }
                     matrix.push(line);
                 }
 
-                // Verify matrix dimensions
-                if (matrix.length !== moduleCount) {
-                    throw new Error('Invalid matrix height');
-                }
-
-                // Output debug info first
-                const debugInfo = [
-                    `URL: ${url}`,
-                    `Module Count: ${moduleCount}`,
-                    `Matrix Size: ${matrix.length}x${matrix[0].length}`,
-                    '---QR Code Matrix---'
-                ].join('\n');
-
-                // Output as plain text with debug info
-                document.body.style.whiteSpace = 'pre';
-                document.body.textContent = matrix.join('\n');
+                // Set content type to plain text
+                document.contentType = 'text/plain';
+                
+                // Clear any HTML
+                document.body.innerHTML = '';
+                document.head.innerHTML = '';
+                
+                // Output just the matrix data
+                document.write(matrix.join('\n'));
+                
+                // Force text/plain content type
+                document.querySelector('html').setAttribute('content-type', 'text/plain');
+                
             } catch (error) {
-                document.body.textContent = 'Error: ' + error.message;
+                document.write('ERROR: ' + error.message);
             }
         }
     </script>
