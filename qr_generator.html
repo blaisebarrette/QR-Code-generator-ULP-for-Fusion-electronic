@@ -31,18 +31,12 @@
                     matrix.push(line);
                 }
 
-                // Set content type to plain text
-                document.contentType = 'text/plain';
+                // Create data URL with plain text content
+                const data = matrix.join('\n');
+                const dataUrl = 'data:text/plain;base64,' + btoa(data);
                 
-                // Clear any HTML
-                document.body.innerHTML = '';
-                document.head.innerHTML = '';
-                
-                // Output just the matrix data
-                document.write(matrix.join('\n'));
-                
-                // Force text/plain content type
-                document.querySelector('html').setAttribute('content-type', 'text/plain');
+                // Redirect to the data URL
+                window.location.href = dataUrl;
                 
             } catch (error) {
                 document.write('ERROR: ' + error.message);
