@@ -78,36 +78,20 @@ void main(void) {
     
     // Prepare file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
-    string debugFile = filedir(argv[0]) + "debug.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using hosted HTML file
-    string cmd;
-    string url = "https://blaisebarrette.com/ulp_qrcode_generator/qr_generator.html";
-    
-    // Use curl and sed to extract just the QR matrix
-    sprintf(cmd, "curl -s \"%s?url=%s&size=%d\" | sed -n '/^-----BEGIN QR MATRIX-----$/,/^-----END QR MATRIX-----$/p' | grep -v '^-----' > \"%s\" 2>%s",
-            url, Url, Size, tmpFile, debugFile);
-    system(cmd);
+    // Generate QR code using server
+    string curlCmd;
+    sprintf(curlCmd, "curl -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
+    system(curlCmd);
     
     // Read QR code data
     string lines[];
     int nLines = fileread(lines, tmpFile);
     
-    // Debug: Print the QR code data
-    output(debugFile, "wt") {
-        printf("Number of lines: %d\n", nLines);
-        for (int i = 0; i < nLines; i++) {
-            printf("Line %d (length %d): %s\n", i, strlen(lines[i]), lines[i]);
-        }
-    }
-    
-    if (nLines <= 0 || nLines != 21) {  // We expect exactly 21 lines
-        string debugLines[];
-        fileread(debugLines, debugFile);
-        dlgMessageBox("Error: Invalid QR code data.\nDebug info:\n" + debugLines[0]);
+    if (nLines <= 0) {
+        dlgMessageBox("Error: Could not generate QR code. Please check your internet connection.");
         system("rm \"" + tmpFile + "\"");
-        system("rm \"" + debugFile + "\"");
         exit(1);
     }
     
@@ -118,10 +102,7 @@ void main(void) {
         printf("SET WIRE_BEND 2;\n");
         
         // Create rectangles for QR code
-        int moduleCount = 21;  // Version 1 QR code size (21x21)
-        int moduleSize = Size / moduleCount;
-        
-        // Use the same positioning logic as the working version
+        int moduleSize = Size / 21;
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
             for (int col = 0; col < strlen(line); col++) {
@@ -138,6 +119,5 @@ void main(void) {
     
     // Clean up and execute
     system("rm \"" + tmpFile + "\"");
-    system("rm \"" + debugFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
