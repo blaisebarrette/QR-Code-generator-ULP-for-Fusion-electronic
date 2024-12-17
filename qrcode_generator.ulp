@@ -84,9 +84,11 @@ void main(void) {
     string browserCmd;
     string githubUrl = "https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/qr_generator.html";
     
-    // Different commands for different operating systems
-    string os = system("uname");
-    if (strlen(os) > 0) {  // Unix-like system
+    // OS detection and command setup
+    string osPath = "/bin/bash";
+    int isUnix = filetest(osPath);
+    
+    if (isUnix) {  // Unix-like system (Mac/Linux)
         sprintf(browserCmd, "curl -s \"%s?url=%s&size=%d\" > \"%s\"", githubUrl, Url, Size, tmpFile);
     } else {  // Windows
         sprintf(browserCmd, "powershell -command \"(Invoke-WebRequest -Uri \\\"%s?url=%s&size=%d\\\").Content\" > \"%s\"", 
