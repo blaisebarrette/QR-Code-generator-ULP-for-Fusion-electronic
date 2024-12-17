@@ -110,12 +110,12 @@ void main(void) {
         printf("SET WIRE_BEND 2;\n");
         
         // Create rectangles for QR code
-        int moduleCount = 33;  // Version 4 QR code size
+        int moduleCount = 21;  // Version 1 QR code size (21x21)
         int moduleSize = Size / moduleCount;
         
         // Center the QR code at the specified position
-        int startX = PosX - (Size / 2);
-        int startY = PosY - (Size / 2);
+        int startX = PosX - (moduleCount * moduleSize / 2);
+        int startY = PosY - (moduleCount * moduleSize / 2);
         
         // Generate QR code with proper spacing
         for (int row = 0; row < nLines; row++) {
@@ -124,8 +124,8 @@ void main(void) {
                 if (line[col] == '1') {
                     int x1 = startX + (col * moduleSize);
                     int y1 = startY + (row * moduleSize);
-                    int x2 = x1 + moduleSize - 1;
-                    int y2 = y1 + moduleSize - 1;
+                    int x2 = x1 + moduleSize;
+                    int y2 = y1 + moduleSize;
                     printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
                 }
             }

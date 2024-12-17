@@ -12,8 +12,8 @@
         const size = parseInt(urlParams.get('size')) || 1000;
 
         if (url) {
-            // Create QR Code with fixed version (size)
-            const qr = qrcode(4, 'L'); // Version 4 gives us a 33x33 matrix
+            // Create QR Code with minimum version
+            const qr = qrcode(1, 'L'); // Version 1 gives us a 21x21 matrix
             qr.addData(url);
             qr.make();
 
