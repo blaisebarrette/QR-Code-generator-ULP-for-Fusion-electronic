@@ -113,19 +113,15 @@ void main(void) {
         int moduleCount = 21;  // Version 1 QR code size (21x21)
         int moduleSize = Size / moduleCount;
         
-        // Center the QR code at the specified position
-        int startX = PosX - (moduleCount * moduleSize / 2);
-        int startY = PosY - (moduleCount * moduleSize / 2);
-        
-        // Generate QR code with proper spacing
+        // Use the same positioning logic as the working version
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
             for (int col = 0; col < strlen(line); col++) {
                 if (line[col] == '1') {
-                    int x1 = startX + (col * moduleSize);
-                    int y1 = startY + (row * moduleSize);
-                    int x2 = x1 + moduleSize;
-                    int y2 = y1 + moduleSize;
+                    int x1 = PosX + col * moduleSize - (Size/2);
+                    int y1 = PosY + row * moduleSize - (Size/2);
+                    int x2 = PosX + (col + 1) * moduleSize - (Size/2);
+                    int y2 = PosY + (row + 1) * moduleSize - (Size/2);
                     printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
                 }
             }

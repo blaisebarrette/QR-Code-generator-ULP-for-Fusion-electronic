@@ -8,31 +8,44 @@
     <script>
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const url = urlParams.get('url');
+        const url = decodeURIComponent(urlParams.get('url'));
         const size = parseInt(urlParams.get('size')) || 1000;
 
         if (url) {
-            // Create QR Code with minimum version
-            const qr = qrcode(1, 'L'); // Version 1 gives us a 21x21 matrix
-            qr.addData(url);
-            qr.make();
+            try {
+                // Create QR Code with minimum version
+                const qr = qrcode(1, 'L'); // Version 1 gives us a 21x21 matrix
+                qr.addData(url);
+                qr.make();
 
-            // Get the QR code matrix
-            const moduleCount = qr.getModuleCount();
-            const matrix = [];
-            
-            // Convert to 1s and 0s format
-            for (let row = 0; row < moduleCount; row++) {
-                let line = '';
-                for (let col = 0; col < moduleCount; col++) {
-                    line += qr.isDark(row, col) ? '1' : '0';
+                // Get the QR code matrix
+                const moduleCount = qr.getModuleCount();
+                const matrix = [];
+                
+                // Convert to 1s and 0s format, ensuring consistent width
+                for (let row = 0; row < moduleCount; row++) {
+                    let line = '';
+                    for (let col = 0; col < moduleCount; col++) {
+                        line += qr.isDark(row, col) ? '1' : '0';
+                    }
+                    // Ensure each line is exactly moduleCount characters
+                    if (line.length !== moduleCount) {
+                        throw new Error('Invalid line length');
+                    }
+                    matrix.push(line);
                 }
-                matrix.push(line);
-            }
 
-            // Output as plain text
-            document.body.style.whiteSpace = 'pre';
-            document.body.textContent = matrix.join('\n');
+                // Verify matrix dimensions
+                if (matrix.length !== moduleCount) {
+                    throw new Error('Invalid matrix height');
+                }
+
+                // Output as plain text
+                document.body.style.whiteSpace = 'pre';
+                document.body.textContent = matrix.join('\n');
+            } catch (error) {
+                document.body.textContent = 'Error: ' + error.message;
+            }
         }
     </script>
 </body>
