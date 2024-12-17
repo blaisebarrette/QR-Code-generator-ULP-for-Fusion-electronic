@@ -6,6 +6,9 @@
 </head>
 <body>
     <script>
+        // Set content type to plain text immediately
+        document.contentType = 'text/plain';
+        
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const url = decodeURIComponent(urlParams.get('url'));
@@ -13,31 +16,20 @@
 
         if (url) {
             try {
-                // Create QR Code with minimum version
-                const qr = qrcode(1, 'L'); // Version 1 gives us a 21x21 matrix
+                // Create QR Code
+                const qr = qrcode(1, 'L');
                 qr.addData(url);
                 qr.make();
 
-                // Get the QR code matrix
+                // Get the matrix and output directly
                 const moduleCount = qr.getModuleCount();
-                const matrix = [];
-                
-                // Convert to 1s and 0s format
                 for (let row = 0; row < moduleCount; row++) {
                     let line = '';
                     for (let col = 0; col < moduleCount; col++) {
                         line += qr.isDark(row, col) ? '1' : '0';
                     }
-                    matrix.push(line);
+                    document.write(line + '\n');
                 }
-
-                // Create data URL with plain text content
-                const data = matrix.join('\n');
-                const dataUrl = 'data:text/plain;base64,' + btoa(data);
-                
-                // Redirect to the data URL
-                window.location.href = dataUrl;
-                
             } catch (error) {
                 document.write('ERROR: ' + error.message);
             }
