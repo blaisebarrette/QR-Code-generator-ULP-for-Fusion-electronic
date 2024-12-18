@@ -1,11 +1,23 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
 
-#usage "en: QR Code Generator for MacOS\n"
-       "Generate QR codes directly on PCB layers.\n"
-       "Usage: Run the ULP and specify URL, layer, and size.\n"
-       "Note: This version is for MacOS only.\n"
-       "For Windows version, visit: https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics"
+#usage "<b>QR Code Generator for MacOS</b>\n"
+       "<p>"
+       "Generate QR codes directly on PCB layers with customizable size and position.<br>"
+       "This ULP allows you to create QR codes that can be placed on any PCB layer "
+       "in your Fusion Electronics design."
+       "</p>"
+       "<p>"
+       "<b>Usage:</b><br>"
+       "Run the ULP and specify URL, layer, and size. The QR code will be generated "
+       "and placed at the specified coordinates."
+       "</p>"
+       "<p>"
+       "<b>Note:</b> This version is for MacOS only.<br>"
+       "For Windows version, visit: "
+       "<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>GitHub Repository</a>"
+       "</p>"
+       "<author>Author: <b>Blaise Barrette</b></author>"
 
 #require 4.11
 
