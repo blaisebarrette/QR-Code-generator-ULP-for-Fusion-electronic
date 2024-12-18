@@ -1,14 +1,10 @@
 # QR Code Generator ULP for Fusion Electronics
 
-⚠️ **MACOS ONLY** - This tool currently works exclusively on macOS systems ⚠️
-
-A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Electronics.
-
 ## System Requirements
 
-- **Operating System**: macOS only
-- Eagle/Fusion360 Electronics
-- Internet connection
+Choose the appropriate version for your operating system:
+- `qrcode_generator_mac.ulp` for MacOS systems
+- `qrcode_generator_win.ulp` for Windows systems
 
 ## Features
 
@@ -22,7 +18,7 @@ A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Ele
 
 ## Installation
 
-1. Download the `qrcode_generator.ulp` file
+1. Download the appropriate ULP file for your operating system
 2. Place it in an accessible folder
 
 That's it! No need to install Python or other dependencies.
@@ -31,8 +27,8 @@ That's it! No need to install Python or other dependencies.
 
 1. In Eagle/Fusion360 Electronics, open your PCB design
 2. Run the ULP script:
-   - In Eagle: `File > Run ULP > qrcode_generator.ulp`
-   - In Fusion360: `Tools > Run ULP > qrcode_generator.ulp`
+   - In Eagle: `File > Run ULP > qrcode_generator_XXX.ulp`
+   - In Fusion360: `Tools > Run ULP > qrcode_generator_XXX.ulp`
 
 3. In the dialog window:
    - Enter the URL for your QR code
