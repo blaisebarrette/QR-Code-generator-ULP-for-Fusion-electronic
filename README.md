@@ -1,6 +1,14 @@
 # QR Code Generator ULP for Fusion Electronics
 
+⚠️ **MACOS ONLY** - This tool currently works exclusively on macOS systems ⚠️
+
 A simple and efficient tool to generate QR codes directly in Eagle/Fusion360 Electronics.
+
+## System Requirements
+
+- **Operating System**: macOS only
+- Eagle/Fusion360 Electronics
+- Internet connection
 
 ## Features
 
