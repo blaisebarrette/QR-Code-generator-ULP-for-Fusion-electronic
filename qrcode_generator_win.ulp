@@ -4,7 +4,8 @@
 #usage "en: QR Code Generator for Windows\n"
        "Generate QR codes directly on PCB layers.\n"
        "Usage: Run the ULP and specify URL, layer, and size.\n"
-       "Note: This version is for Windows only."
+       "Note: This version is for Windows only.\n"
+       "For MacOS version, visit: https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics"
 
 #require 4.11
 

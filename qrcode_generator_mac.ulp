@@ -4,7 +4,8 @@
 #usage "en: QR Code Generator for MacOS\n"
        "Generate QR codes directly on PCB layers.\n"
        "Usage: Run the ULP and specify URL, layer, and size.\n"
-       "Note: This version is for MacOS only."
+       "Note: This version is for MacOS only.\n"
+       "For Windows version, visit: https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics"
 
 #require 4.11
 
