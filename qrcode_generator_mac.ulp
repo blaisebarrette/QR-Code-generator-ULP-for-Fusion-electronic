@@ -53,21 +53,26 @@ string findVersionInfo(string json, string version) {
     string searchVer = "\"version\":\"" + version + "\"";
     int pos = strstr(json, searchVer);
     if (pos >= 0) {
-        // Reculer pour trouver le début de l'objet
+        // Chercher le début de l'objet le plus proche avant la version
         int startPos = pos;
-        while (startPos > 0 && json[startPos] != '{') {
+        while (startPos > 0) {
             startPos--;
+            if (json[startPos] == '{') break;
         }
-        // Avancer pour trouver la fin de l'objet
+        
+        // Chercher la fin de l'objet
         int endPos = pos;
-        int braceCount = 1;
-        while (endPos < strlen(json) && braceCount > 0) {
+        while (endPos < strlen(json)) {
             endPos++;
-            if (json[endPos] == '{') braceCount++;
-            if (json[endPos] == '}') braceCount--;
+            if (json[endPos] == '}') break;
         }
-        if (braceCount == 0) {
-            return strsub(json, startPos, endPos - startPos + 1);
+        
+        if (startPos >= 0 && endPos < strlen(json)) {
+            string versionObj = strsub(json, startPos, endPos - startPos + 1);
+            // Vérifier que c'est bien un objet de version complet
+            if (strstr(versionObj, "\"python_script\"") >= 0) {
+                return versionObj;
+            }
         }
     }
     return "";
@@ -75,7 +80,15 @@ string findVersionInfo(string json, string version) {
 
 // Function to check if version is supported
 int isVersionSupported(string versionInfo) {
-    return (strstr(versionInfo, "\"supported\":true") >= 0);
+    if (versionInfo == "") return 0;
+    int supportedPos = strstr(versionInfo, "\"supported\"");
+    if (supportedPos >= 0) {
+        // Chercher true ou false après "supported":
+        int valuePos = strstr(versionInfo, ":", supportedPos) + 1;
+        while (valuePos < strlen(versionInfo) && versionInfo[valuePos] == ' ') valuePos++;
+        return (strsub(versionInfo, valuePos, 4) == "true");
+    }
+    return 0;
 }
 
 // Function to get script URL from version info
