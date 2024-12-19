@@ -86,35 +86,40 @@ void checkForUpdates() {
     string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json' -TimeoutSec 10 -OutFile '%s'\"", tmpFile);
     
     if (system(curlCmd) != 0) {
-        // Failed to fetch version info
+        dlgMessageBox("Debug: Failed to fetch version info\n" +
+                     "ULP Version: " + VERSION + "\n" +
+                     "Command: " + curlCmd,
+                     "OK");
         return;
     }
     
     string versionData[];
     int nLines = fileread(versionData, tmpFile);
     if (nLines <= 0) {
+        dlgMessageBox("Debug: Empty version file\n" +
+                     "ULP Version: " + VERSION + "\n" +
+                     "File: " + tmpFile,
+                     "OK");
         system("del \"" + tmpFile + "\"");
         return;
     }
     
     string jsonData = strjoin(versionData, '\n');
     string latestVersion = getJsonValue(jsonData, "latest_version");
-    
-    // Find current version info
-    string currentVersionSupported = "true";
-    string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
-    if (regexp(pattern, jsonData)) {
-        currentVersionSupported = (strstr(jsonData, "\"supported\"\\s*:\\s*true") >= 0) ? "true" : "false";
-    }
+    string versionInfo = findVersionInfo(jsonData, VERSION);
+    int supported = isVersionSupported(versionInfo);
     
     // Check if current version is supported
-    if (currentVersionSupported == "false") {
-        dlgMessageBox(
-            "<b>Error: This version of the ULP is no longer supported.</b>\n\n" +
-            "Please download the latest version to continue:\n" +
-            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-            "OK"
-        );
+    if (!supported) {
+        dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
+                     "Debug Info:\n" +
+                     "- ULP Version: " + VERSION + "\n" +
+                     "- Latest Version: " + latestVersion + "\n" +
+                     "- Version Info Found: " + (versionInfo != "" ? "Yes" : "No") + "\n" +
+                     "- JSON Data: " + jsonData + "\n\n" +
+                     "Please download the latest version to continue:\n" +
+                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                     "OK");
         exit(1);
     }
     
