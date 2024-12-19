@@ -27,12 +27,55 @@ int PosX, PosY;
 
 // Function to parse JSON string
 string getJsonValue(string json, string key) {
-    string pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
-    string value;
-    int pos = strxstr(json, pattern);
+    string searchKey = "\"" + key + "\"";
+    int pos = strstr(json, searchKey);
     if (pos >= 0) {
-        if (regexp(pattern, json, value))
-            return value;
+        // Find the first ":" after the key
+        pos = strstr(json, ":", pos);
+        if (pos >= 0) {
+            // Find the opening quote
+            pos = strstr(json, "\"", pos);
+            if (pos >= 0) {
+                pos++; // Skip the opening quote
+                // Find the closing quote
+                int endPos = strstr(json, "\"", pos);
+                if (endPos >= 0) {
+                    return strsub(json, pos, endPos - pos);
+                }
+            }
+        }
+    }
+    return "";
+}
+
+// Function to find version info in JSON
+string findVersionInfo(string json, string version) {
+    string searchVer = "\"version\":\"" + version + "\"";
+    int pos = strstr(json, searchVer);
+    if (pos >= 0) {
+        // Find the closing brace
+        int endPos = strstr(json, "}", pos);
+        if (endPos >= 0) {
+            return strsub(json, pos, endPos - pos + 1);
+        }
+    }
+    return "";
+}
+
+// Function to check if version is supported
+int isVersionSupported(string versionInfo) {
+    return (strstr(versionInfo, "\"supported\":true") >= 0);
+}
+
+// Function to get script URL from version info
+string getScriptUrl(string versionInfo) {
+    int urlStart = strstr(versionInfo, "\"url\":\"");
+    if (urlStart >= 0) {
+        urlStart += 7; // Skip "url":""
+        int urlEnd = strstr(versionInfo, "\"", urlStart);
+        if (urlEnd >= 0) {
+            return strsub(versionInfo, urlStart, urlEnd - urlStart);
+        }
     }
     return "";
 }
@@ -40,7 +83,7 @@ string getJsonValue(string json, string key) {
 // Function to check for updates
 void checkForUpdates() {
     string tmpFile = filedir(argv[0]) + "version_check.txt";
-    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json' -TimeoutSec 10 -OutFile '%s'\"", tmpFile);
+    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json' -TimeoutSec 10 -OutFile '%s'\"", tmpFile);
     
     if (system(curlCmd) != 0) {
         // Failed to fetch version info
@@ -187,14 +230,8 @@ void main(void) {
     string versionData[];
     if (fileread(versionData, tmpFile) > 0) {
         string jsonData = strjoin(versionData, '\n');
-        string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
-        if (regexp(pattern, jsonData)) {
-            string urlPattern = "\"url\"\\s*:\\s*\"([^\"]*)\"";
-            string url;
-            if (regexp(urlPattern, jsonData, url)) {
-                pythonScriptUrl = url;
-            }
-        }
+        string versionInfo = findVersionInfo(jsonData, VERSION);
+        pythonScriptUrl = getScriptUrl(versionInfo);
     }
     system("del \"" + tmpFile + "\"");
     

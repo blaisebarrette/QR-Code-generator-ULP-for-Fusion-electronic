@@ -27,12 +27,55 @@ int PosX, PosY;
 
 // Function to parse JSON string
 string getJsonValue(string json, string key) {
-    string pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
-    string value;
-    int pos = strxstr(json, pattern);
+    string searchKey = "\"" + key + "\"";
+    int pos = strstr(json, searchKey);
     if (pos >= 0) {
-        if (regexp(pattern, json, value))
-            return value;
+        // Find the first ":" after the key
+        pos = strstr(json, ":", pos);
+        if (pos >= 0) {
+            // Find the opening quote
+            pos = strstr(json, "\"", pos);
+            if (pos >= 0) {
+                pos++; // Skip the opening quote
+                // Find the closing quote
+                int endPos = strstr(json, "\"", pos);
+                if (endPos >= 0) {
+                    return strsub(json, pos, endPos - pos);
+                }
+            }
+        }
+    }
+    return "";
+}
+
+// Function to find version info in JSON
+string findVersionInfo(string json, string version) {
+    string searchVer = "\"version\":\"" + version + "\"";
+    int pos = strstr(json, searchVer);
+    if (pos >= 0) {
+        // Find the closing brace
+        int endPos = strstr(json, "}", pos);
+        if (endPos >= 0) {
+            return strsub(json, pos, endPos - pos + 1);
+        }
+    }
+    return "";
+}
+
+// Function to check if version is supported
+int isVersionSupported(string versionInfo) {
+    return (strstr(versionInfo, "\"supported\":true") >= 0);
+}
+
+// Function to get script URL from version info
+string getScriptUrl(string versionInfo) {
+    int urlStart = strstr(versionInfo, "\"url\":\"");
+    if (urlStart >= 0) {
+        urlStart += 7; // Skip "url":""
+        int urlEnd = strstr(versionInfo, "\"", urlStart);
+        if (urlEnd >= 0) {
+            return strsub(versionInfo, urlStart, urlEnd - urlStart);
+        }
     }
     return "";
 }
@@ -40,7 +83,7 @@ string getJsonValue(string json, string key) {
 // Function to check for updates
 void checkForUpdates() {
     string tmpFile = filedir(argv[0]) + "version_check.txt";
-    string curlCmd = sprintf("curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"%s\"", tmpFile);
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json\" > \"" + tmpFile + "\"";
     
     if (system(curlCmd) != 0) {
         // Failed to fetch version info
@@ -58,45 +101,24 @@ void checkForUpdates() {
     string latestVersion = getJsonValue(jsonData, "latest_version");
     
     // Find current version info
-    string currentVersionSupported = "true";
-    string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
-    if (regexp(pattern, jsonData)) {
-        currentVersionSupported = (strstr(jsonData, "\"supported\"\\s*:\\s*true") >= 0) ? "true" : "false";
-    }
+    string versionInfo = findVersionInfo(jsonData, VERSION);
+    int supported = isVersionSupported(versionInfo);
     
     // Check if current version is supported
-    if (currentVersionSupported == "false") {
-        dlgMessageBox(
-            "<b>Error: This version of the ULP is no longer supported.</b>\n\n" +
-            "Please download the latest version to continue:\n" +
-            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-            "OK"
-        );
+    if (!supported) {
+        dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
+                     "Please download the latest version to continue:\n" +
+                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                     "OK");
         exit(1);
     }
     
     // Check for newer version
     if (latestVersion != VERSION) {
-        // Extract release notes for versions newer than current
-        string releaseNotes = "";
-        string versions[];
-        int versionCount = strsplit(versions, jsonData, "\"version\"");
-        for (int i = 1; i < versionCount; i++) {
-            string ver = getJsonValue(versions[i], "version");
-            if (ver > VERSION) {
-                string notes = getJsonValue(versions[i], "release_notes");
-                string date = getJsonValue(versions[i], "release_date");
-                releaseNotes += sprintf("- %s (v%s, %s)\n", notes, ver, date);
-            }
-        }
-        
-        dlgMessageBox(
-            sprintf("<b>A new version is available (v%s)!</b>\n\n", latestVersion) +
-            "Changes since your version:\n" + releaseNotes + "\n" +
-            "Download the update here:\n" +
-            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-            "Continue"
-        );
+        dlgMessageBox("A new version is available (v" + latestVersion + ")!\n\n" +
+                     "Download the update here:\n" +
+                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                     "Continue");
     }
     
     system("rm \"" + tmpFile + "\"");
@@ -178,31 +200,24 @@ void main(void) {
     
     // Modify the QR code generation part to use version-specific URL
     string pythonScriptUrl = "";
-
+    
     // Récupérer l'URL du script Python pour la version actuelle
-    string tmpFile = filedir(argv[0]) + "version_check.txt";
-    string curlCmd = sprintf("curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"%s\"", tmpFile);
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"" + tmpFile + "\"";
     system(curlCmd);
-
+    
     string versionData[];
     if (fileread(versionData, tmpFile) > 0) {
         string jsonData = strjoin(versionData, '\n');
-        string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
-        if (regexp(pattern, jsonData)) {
-            string urlPattern = "\"url\"\\s*:\\s*\"([^\"]*)\"";
-            string url;
-            if (regexp(urlPattern, jsonData, url)) {
-                pythonScriptUrl = url;
-            }
-        }
+        string versionInfo = findVersionInfo(jsonData, VERSION);
+        pythonScriptUrl = getScriptUrl(versionInfo);
     }
     system("rm \"" + tmpFile + "\"");
-
+    
     if (pythonScriptUrl == "") {
         // Utiliser l'URL par défaut si on ne peut pas récupérer l'URL spécifique
         pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
     }
-
+    
     // Modifier la commande curl pour utiliser l'URL du script Python
     sprintf(curlCmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
     
