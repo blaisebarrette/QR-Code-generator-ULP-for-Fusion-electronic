@@ -81,13 +81,18 @@ string findVersionInfo(string json, string version) {
 // Function to check if version is supported
 int isVersionSupported(string versionInfo) {
     if (versionInfo == "") return 0;
-    int supportedPos = strstr(versionInfo, "\"supported\"");
-    if (supportedPos >= 0) {
-        // Chercher true ou false après "supported":
-        int valuePos = strstr(versionInfo, ":", supportedPos) + 1;
-        while (valuePos < strlen(versionInfo) && versionInfo[valuePos] == ' ') valuePos++;
-        return (strsub(versionInfo, valuePos, 4) == "true");
+    
+    // Chercher "supported":false d'abord (plus spécifique)
+    if (strstr(versionInfo, "\"supported\":false") >= 0) {
+        return 0;
     }
+    
+    // Si on trouve "supported":true, la version est supportée
+    if (strstr(versionInfo, "\"supported\":true") >= 0) {
+        return 1;
+    }
+    
+    // Par défaut, considérer comme non supporté
     return 0;
 }
 
