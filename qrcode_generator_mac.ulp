@@ -177,8 +177,34 @@ void main(void) {
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
     // Modify the QR code generation part to use version-specific URL
-    string curlCmd;
-    sprintf(curlCmd, "curl -m 10 -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
+    string pythonScriptUrl = "";
+
+    // Récupérer l'URL du script Python pour la version actuelle
+    string tmpFile = filedir(argv[0]) + "version_check.txt";
+    string curlCmd = sprintf("curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"%s\"", tmpFile);
+    system(curlCmd);
+
+    string versionData[];
+    if (fileread(versionData, tmpFile) > 0) {
+        string jsonData = strjoin(versionData, '\n');
+        string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
+        if (regexp(pattern, jsonData)) {
+            string urlPattern = "\"url\"\\s*:\\s*\"([^\"]*)\"";
+            string url;
+            if (regexp(urlPattern, jsonData, url)) {
+                pythonScriptUrl = url;
+            }
+        }
+    }
+    system("rm \"" + tmpFile + "\"");
+
+    if (pythonScriptUrl == "") {
+        // Utiliser l'URL par défaut si on ne peut pas récupérer l'URL spécifique
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
+
+    // Modifier la commande curl pour utiliser l'URL du script Python
+    sprintf(curlCmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
     
     if (system(curlCmd) != 0) {
         dlgMessageBox(
