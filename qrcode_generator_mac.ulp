@@ -53,10 +53,21 @@ string findVersionInfo(string json, string version) {
     string searchVer = "\"version\":\"" + version + "\"";
     int pos = strstr(json, searchVer);
     if (pos >= 0) {
-        // Find the closing brace
-        int endPos = strstr(json, "}", pos);
-        if (endPos >= 0) {
-            return strsub(json, pos, endPos - pos + 1);
+        // Reculer pour trouver le début de l'objet
+        int startPos = pos;
+        while (startPos > 0 && json[startPos] != '{') {
+            startPos--;
+        }
+        // Avancer pour trouver la fin de l'objet
+        int endPos = pos;
+        int braceCount = 1;
+        while (endPos < strlen(json) && braceCount > 0) {
+            endPos++;
+            if (json[endPos] == '{') braceCount++;
+            if (json[endPos] == '}') braceCount--;
+        }
+        if (braceCount == 0) {
+            return strsub(json, startPos, endPos - startPos + 1);
         }
     }
     return "";
@@ -138,46 +149,6 @@ void checkForUpdates() {
 void updateDefaultPosition(int size) {
     PosX = -(size + 1000);
     PosY = -(size + 1000);
-}
-
-void checkForUpdates() {
-    string tmpFile = filedir(argv[0]) + "version_check.txt";
-    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json\" > \"" + tmpFile + "\"";
-    
-    if (system(curlCmd) != 0) {
-        return;
-    }
-    
-    string versionData[];
-    int nLines = fileread(versionData, tmpFile);
-    if (nLines <= 0) {
-        system("rm \"" + tmpFile + "\"");
-        return;
-    }
-    
-    string jsonData = strjoin(versionData, '\n');
-    string latestVersion = getJsonValue(jsonData, "latest_version");
-    string versionInfo = findVersionInfo(jsonData, VERSION);
-    int supported = isVersionSupported(versionInfo);
-    
-    // Check if current version is supported
-    if (!supported) {
-        dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
-                     "Please download the latest version to continue:\n" +
-                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-                     "OK");
-        exit(1);
-    }
-    
-    // Check for newer version
-    if (latestVersion != VERSION) {
-        dlgMessageBox("A new version is available (v" + latestVersion + ")!\n\n" +
-                     "Download the update here:\n" +
-                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-                     "Continue");
-    }
-    
-    system("rm \"" + tmpFile + "\"");
 }
 
 void main(void) {
