@@ -1,5 +1,5 @@
 // QR Code Generator for Eagle/Fusion Electronics
-// This ULP generates QR codes directly on PCB layers
+// Version 1.0.0
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
@@ -22,7 +22,85 @@
 #require 4.11
 
 // Global variables
+string VERSION = "1.0.0";
 int PosX, PosY;
+
+// Function to parse JSON string
+string getJsonValue(string json, string key) {
+    string pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+    string value;
+    int pos = strxstr(json, pattern);
+    if (pos >= 0) {
+        if (regexp(pattern, json, value))
+            return value;
+    }
+    return "";
+}
+
+// Function to check for updates
+void checkForUpdates() {
+    string tmpFile = filedir(argv[0]) + "version_check.txt";
+    string curlCmd = sprintf("curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"%s\"", tmpFile);
+    
+    if (system(curlCmd) != 0) {
+        // Failed to fetch version info
+        return;
+    }
+    
+    string versionData[];
+    int nLines = fileread(versionData, tmpFile);
+    if (nLines <= 0) {
+        system("rm \"" + tmpFile + "\"");
+        return;
+    }
+    
+    string jsonData = strjoin(versionData, '\n');
+    string latestVersion = getJsonValue(jsonData, "latest_version");
+    
+    // Find current version info
+    string currentVersionSupported = "true";
+    string pattern = "\"version\"\\s*:\\s*\"" + VERSION + "\"([^}]*)}";
+    if (regexp(pattern, jsonData)) {
+        currentVersionSupported = (strstr(jsonData, "\"supported\"\\s*:\\s*true") >= 0) ? "true" : "false";
+    }
+    
+    // Check if current version is supported
+    if (currentVersionSupported == "false") {
+        dlgMessageBox(
+            "<b>Error: This version of the ULP is no longer supported.</b>\n\n" +
+            "Please download the latest version to continue:\n" +
+            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+            "OK"
+        );
+        exit(1);
+    }
+    
+    // Check for newer version
+    if (latestVersion != VERSION) {
+        // Extract release notes for versions newer than current
+        string releaseNotes = "";
+        string versions[];
+        int versionCount = strsplit(versions, jsonData, "\"version\"");
+        for (int i = 1; i < versionCount; i++) {
+            string ver = getJsonValue(versions[i], "version");
+            if (ver > VERSION) {
+                string notes = getJsonValue(versions[i], "release_notes");
+                string date = getJsonValue(versions[i], "release_date");
+                releaseNotes += sprintf("- %s (v%s, %s)\n", notes, ver, date);
+            }
+        }
+        
+        dlgMessageBox(
+            sprintf("<b>A new version is available (v%s)!</b>\n\n", latestVersion) +
+            "Changes since your version:\n" + releaseNotes + "\n" +
+            "Download the update here:\n" +
+            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+            "Continue"
+        );
+    }
+    
+    system("rm \"" + tmpFile + "\"");
+}
 
 // Function to calculate default position based on size
 void updateDefaultPosition(int size) {
@@ -31,6 +109,9 @@ void updateDefaultPosition(int size) {
 }
 
 void main(void) {
+    // Check for updates first
+    checkForUpdates();
+    
     // Initialize variables
     string Url = "";
     int Size = 500;
@@ -95,10 +176,18 @@ void main(void) {
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using server with curl (MacOS)
+    // Modify the QR code generation part to use version-specific URL
     string curlCmd;
-    sprintf(curlCmd, "curl -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
-    system(curlCmd);
+    sprintf(curlCmd, "curl -m 10 -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
+    
+    if (system(curlCmd) != 0) {
+        dlgMessageBox(
+            "<b>Error: The QR Code service is temporarily unavailable.</b>\n\n" +
+            "Please try again later.",
+            "OK"
+        );
+        exit(1);
+    }
     
     // Read QR code data
     string lines[];
