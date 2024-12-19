@@ -7,7 +7,7 @@
             "release_notes": "Version check implementation",
             "python_script": {
                 "url": "https://blaisebarrette.pythonanywhere.com/generate-qr",
-                "supported": false
+                "supported": true
             }
         },
         {
