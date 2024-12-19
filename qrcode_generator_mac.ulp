@@ -39,7 +39,8 @@ void main(void) {
     string LayerNames[] = {
         "Top Silkscreen (tPlace)",
         "Bottom Silkscreen (bPlace)",
-        "Top Documentation (tDocu)"
+        "Top Documentation (tDocu)",
+        "Bottom Documentation (bDocu)"
     };
     int LayerNumbers[] = {21, 22, 51};
     int SelectedLayer = 0;
