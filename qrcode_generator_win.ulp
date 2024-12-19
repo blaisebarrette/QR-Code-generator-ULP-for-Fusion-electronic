@@ -30,6 +30,46 @@ void updateDefaultPosition(int size) {
     PosY = -(size + 1000);
 }
 
+void checkForUpdates() {
+    string tmpFile = filedir(argv[0]) + "version_check.txt";
+    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json' -TimeoutSec 10 -OutFile '%s'\"", tmpFile);
+    
+    if (system(curlCmd) != 0) {
+        return;
+    }
+    
+    string versionData[];
+    int nLines = fileread(versionData, tmpFile);
+    if (nLines <= 0) {
+        system("del \"" + tmpFile + "\"");
+        return;
+    }
+    
+    string jsonData = strjoin(versionData, '\n');
+    string latestVersion = getJsonValue(jsonData, "latest_version");
+    string versionInfo = findVersionInfo(jsonData, VERSION);
+    int supported = isVersionSupported(versionInfo);
+    
+    // Check if current version is supported
+    if (!supported) {
+        dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
+                     "Please download the latest version to continue:\n" +
+                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                     "OK");
+        exit(1);
+    }
+    
+    // Check for newer version
+    if (latestVersion != VERSION) {
+        dlgMessageBox("A new version is available (v" + latestVersion + ")!\n\n" +
+                     "Download the update here:\n" +
+                     "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                     "Continue");
+    }
+    
+    system("del \"" + tmpFile + "\"");
+}
+
 void main(void) {
     // Initialize variables
     string Url = "";
