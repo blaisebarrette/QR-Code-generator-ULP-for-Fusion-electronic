@@ -118,6 +118,9 @@ void main(void) {
         
         // Create rectangles for QR code
         int moduleSize = Size / 21;
+        // Check if bottom layer is selected (22 or 52)
+        int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
+        
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
             for (int col = 0; col < strlen(line); col++) {
@@ -126,6 +129,14 @@ void main(void) {
                     int y1 = PosY + row * moduleSize - (Size/2);
                     int x2 = PosX + (col + 1) * moduleSize - (Size/2);
                     int y2 = PosY + (row + 1) * moduleSize - (Size/2);
+                    
+                    // Mirror X coordinates if bottom layer
+                    if (isBottomLayer) {
+                        int temp_x1 = x1;
+                        x1 = -x2;
+                        x2 = -temp_x1;
+                    }
+                    
                     printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
                 }
             }
