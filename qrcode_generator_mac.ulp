@@ -42,7 +42,7 @@ void main(void) {
         "Top Documentation (tDocu)",
         "Bottom Documentation (bDocu)"
     };
-    int LayerNumbers[] = {21, 22, 51};
+    int LayerNumbers[] = {21, 22, 51, 52};
     int SelectedLayer = 0;
     
     // Initialize default positions
