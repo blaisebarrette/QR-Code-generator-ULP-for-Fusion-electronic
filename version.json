@@ -4,7 +4,16 @@
         {
             "version": "1.0.0",
             "release_date": "2024-12-19",
-            "release_notes": "Versioning support added",
+            "release_notes": "Version check implementation",
+            "python_script": {
+                "url": "https://blaisebarrette.pythonanywhere.com/generate-qr",
+                "supported": false
+            }
+        },
+        {
+            "version": "0.2",
+            "release_date": "2024-12-19",
+            "release_notes": "Initial release",
             "python_script": {
                 "url": "https://blaisebarrette.pythonanywhere.com/generate-qr",
                 "supported": true

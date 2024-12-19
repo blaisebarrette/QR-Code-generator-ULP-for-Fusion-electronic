@@ -236,7 +236,7 @@ void main(void) {
     string pythonScriptUrl = "";
     
     // Récupérer l'URL du script Python pour la version actuelle
-    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.json\" > \"" + tmpFile + "\"";
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/version.json\" > \"" + tmpFile + "\"";
     system(curlCmd);
     
     string versionData[];
