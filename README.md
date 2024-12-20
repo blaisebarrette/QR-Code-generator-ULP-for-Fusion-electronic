@@ -82,7 +82,7 @@ Contributions are welcome! Feel free to:
 
 ## Version History
 
-See [versions.csv](versions.csv) for complete version history and release notes.
+See [version_history.md](version_history.md) for complete version history and release notes.
 
 ## License
 
