@@ -1,6 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.1-dev
+// Version 1.0.1
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
@@ -33,7 +33,7 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.1-dev";
+string VERSION = "1.0.1";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -69,7 +69,7 @@ void calculatePosition(int size) {
 // Function to get API URL for current version
 string getApiUrl() {
     string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
-    string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv\" > \"" + csvFile + "\"";
+    string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
     
     string result;
     int exitCode = system(curlCmd);
@@ -161,7 +161,7 @@ void loadLocalizedTexts() {
     if (LANG == "") LANG = "en";  // Default to English
     
     string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
-    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/localization.csv\" > \"" + csvFile + "\"";
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
     
     if (system(curlCmd) != 0) {
         return;  // Silently fall back to key names
