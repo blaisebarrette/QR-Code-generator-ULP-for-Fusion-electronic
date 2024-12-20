@@ -35,6 +35,29 @@
 // Global variables
 string VERSION = "1.0.1-dev";
 int PosX, PosY;
+string LANG;  // Current language code
+
+// Arrays for localization
+string TextKeys[];    // Store keys
+string TextValues[];  // Store corresponding values
+int TextCount = 0;    // Number of texts loaded
+
+// Function to get localized text by key
+string getText(string key) {
+    for (int i = 0; i < TextCount; i++) {
+        if (TextKeys[i] == key) {
+            return TextValues[i];
+        }
+    }
+    return key;  // Return key if text not found
+}
+
+// Function to add text to arrays
+void addText(string key, string value) {
+    TextKeys[TextCount] = key;
+    TextValues[TextCount] = value;
+    TextCount++;
+}
 
 // Function to calculate position based on size
 void calculatePosition(int size) {
@@ -44,21 +67,21 @@ void calculatePosition(int size) {
 
 // Function to get API URL for current version
 string getApiUrl() {
-    string csvFile = filedir(argv[0]) + "TempCSVFile.csv";
+    string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
     string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv\" > \"" + csvFile + "\"";
     
     string result;
     int exitCode = system(curlCmd);
+    int i;  // Déclarer i ici pour toute la fonction
     
     if (exitCode != 0) {
-        dlgMessageBox("Network Error:\n\n" +
-                     "Failed to fetch version information\n\n" +
-                     "Debug Info:\n" +
+        dlgMessageBox(getText("ERROR_NETWORK") + "\n\n" +
+                     getText("DEBUG_INFO") + "\n" +
                      "- Exit Code: " + exitCode + "\n" +
                      "- Command: " + curlCmd + "\n" +
                      "- ULP Version: " + VERSION + "\n\n" +
                      "Please check your internet connection.",
-                     "OK");
+                     getText("BUTTON_OK"));
         return "";
     }
     
@@ -72,7 +95,7 @@ string getApiUrl() {
     }
     
     // Parcourir les lignes (en sautant l'en-tête)
-    for (int i = 1; i < nLines; i++) {
+    for (i = 1; i < nLines; i++) {  // Utiliser le i déclaré plus haut
         string fields[];
         int n = strsplit(fields, csvLines[i], ',');
         if (n >= 4 && fields[0] == VERSION) {
@@ -96,7 +119,84 @@ string getApiUrl() {
     return "";
 }
 
+// Function to trim whitespace from string
+string trim(string str) {
+    string result = "";
+    int start = 0;
+    int end = strlen(str) - 1;
+    
+    // Find first non-space character
+    while (start < strlen(str)) {
+        if (strsub(str, start, 1) != " ") break;
+        start++;
+    }
+    
+    // Find last non-space character
+    while (end >= 0) {
+        if (strsub(str, end, 1) != " ") break;
+        end--;
+    }
+    
+    // Extract the trimmed string
+    if (start <= end) {
+        result = strsub(str, start, end - start + 1);
+    }
+    
+    return result;
+}
+
+// Function to load localized texts
+void loadLocalizedTexts() {
+    LANG = language();
+    if (LANG == "") LANG = "en";  // Default to English
+    
+    string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/localization.csv\" > \"" + csvFile + "\"";
+    
+    if (system(curlCmd) != 0) {
+        return;  // Silently fall back to key names
+    }
+    
+    string csvLines[];
+    int nLines = fileread(csvLines, csvFile);
+    
+    if (nLines <= 0) {
+        system("rm \"" + csvFile + "\"");
+        return;  // Silently fall back to key names
+    }
+    
+    // Get language column index
+    string headers[];
+    int nCols = strsplit(headers, csvLines[0], ',');
+    int langCol = 1;  // Default to English (column 1)
+    int i;
+    
+    for (i = 0; i < nCols; i++) {
+        string header = trim(headers[i]);
+        if (header == LANG) {
+            langCol = i;
+            break;
+        }
+    }
+    
+    // Load texts
+    for (i = 1; i < nLines; i++) {
+        string fields[];
+        int n = strsplit(fields, csvLines[i], ',');
+        if (n > langCol) {
+            string key = trim(fields[0]);
+            string value = trim(fields[langCol]);
+            addText(key, value);
+        }
+    }
+    
+    system("rm \"" + csvFile + "\"");
+}
+
 void main(void) {
+    // Load localized texts first
+    loadLocalizedTexts();
+    
     // Initialize variables
     string Url = "";
     int Size = 500;
@@ -116,34 +216,32 @@ void main(void) {
     calculatePosition(Size);
     
     // Dialog for input
-    if (!dlgDialog("QR Code Generator") {
+    if (!dlgDialog(getText("TITLE")) {
         dlgHBoxLayout {
             dlgVBoxLayout {
-                dlgGroup("QR Code Settings") {
-                    dlgLabel("Enter the URL for your QR code:");
+                dlgGroup(getText("SETTINGS_GROUP")) {
+                    dlgLabel(getText("URL_LABEL"));
                     dlgStringEdit(Url);
                     dlgSpacing(10);
-                    dlgLabel("Enter size in mils (250-5000):");
+                    dlgLabel(getText("SIZE_LABEL"));
                     dlgSpinBox(Size, 250, 5000);
                     dlgSpacing(10);
-                    dlgLabel("Select layer:");
+                    dlgLabel(getText("LAYER_LABEL"));
                     dlgComboBox(LayerNames, SelectedLayer);
                     dlgSpacing(10);
-                    dlgLabel("Note: The QR code will be automatically placed\n" +
-                            "in the lower-left quadrant of your board,\n" +
-                            "away from the origin point (0,0).");
+                    dlgLabel(getText("POSITION_NOTE"));
                 }
                 dlgSpacing(10);
                 dlgHBoxLayout {
                     dlgStretch(1);
-                    dlgPushButton("+OK") dlgAccept();
-                    dlgPushButton("-Cancel") dlgReject();
+                    dlgPushButton("+" + getText("BUTTON_OK")) dlgAccept();
+                    dlgPushButton("-" + getText("BUTTON_CANCEL")) dlgReject();
                     dlgStretch(1);
                 }
             }
         }
     } || Url == "") {
-        dlgMessageBox("No URL provided. Operation cancelled.");
+        dlgMessageBox(getText("ERROR_NO_URL"));
         exit(0);
     }
     
