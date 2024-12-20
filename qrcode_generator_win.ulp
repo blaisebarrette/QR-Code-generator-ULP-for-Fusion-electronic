@@ -34,6 +34,7 @@
 
 // Global variables
 string VERSION = "1.0.1-dev";
+string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
 
@@ -93,9 +94,18 @@ string getApiUrl() {
         system("del \"" + csvFile + "\"");
         return "";
     }
+
+    // Trouver la dernière version disponible (première ligne après l'en-tête)
+    if (nLines > 1) {
+        string fields[];
+        int n = strsplit(fields, csvLines[1], ',');
+        if (n >= 4) {
+            LATEST_VERSION = fields[0];  // Première version est la plus récente
+        }
+    }
     
-    // Parcourir les lignes (en sautant l'en-tête)
-    for (i = 1; i < nLines; i++) {  // Utiliser le i déclaré plus haut
+    // Parcourir les lignes pour trouver la version courante
+    for (i = 1; i < nLines; i++) {
         string fields[];
         int n = strsplit(fields, csvLines[i], ',');
         if (n >= 4 && fields[0] == VERSION) {
@@ -239,7 +249,15 @@ void main(void) {
                     dlgStretch(1);
                 }
                 dlgHBoxLayout {
-                    dlgLabel("<font color='gray' size='-1'>v" + VERSION + "</font>");
+                    string versionText;
+                    if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
+                        // Version plus ancienne détectée
+                        sprintf(versionText, "<font color='#CC0000' size='-1'>v%s (v%s available)</font>", VERSION, LATEST_VERSION);
+                    } else {
+                        // Version à jour
+                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
+                    }
+                    dlgLabel(versionText);
                     dlgStretch(1);
                 }
             }
