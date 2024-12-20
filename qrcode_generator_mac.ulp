@@ -1,16 +1,27 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
+// Version 1.0.1-dev
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
-       "Generate QR codes directly on PCB layers with customizable size and position.<br>"
+       "Generate QR codes directly on PCB layers with customizable size.<br>"
        "This ULP allows you to create QR codes that can be placed on any PCB layer "
        "in your Fusion Electronics design."
        "</p>"
        "<p>"
        "<b>Usage:</b><br>"
-       "Run the ULP and specify URL, layer, and size. The QR code will be generated "
-       "and placed at the specified coordinates."
+       "1. Run the ULP and enter your URL<br>"
+       "2. Select the size (250-5000 mils)<br>"
+       "3. Choose the destination layer<br>"
+       "The QR code will be automatically placed in the lower-left quadrant."
+       "</p>"
+       "<p>"
+       "<b>Supported Layers:</b><br>"
+       "- Top Silkscreen (tPlace)<br>"
+       "- Bottom Silkscreen (bPlace)<br>"
+       "- Top Documentation (tDocu)<br>"
+       "- Bottom Documentation (bDocu)<br>"
+       "- Document (Docu)"
        "</p>"
        "<p>"
        "<b>Note:</b> This version is for MacOS only.<br>"
@@ -22,15 +33,180 @@
 #require 4.11
 
 // Global variables
+string VERSION = "1.0.1-dev";
+string LATEST_VERSION = "";
 int PosX, PosY;
+string LANG;  // Current language code
 
-// Function to calculate default position based on size
-void updateDefaultPosition(int size) {
-    PosX = -(size + 1000);
-    PosY = -(size + 1000);
+// Arrays for localization
+string TextKeys[];    // Store keys
+string TextValues[];  // Store corresponding values
+int TextCount = 0;    // Number of texts loaded
+
+// Function to get localized text by key
+string getText(string key) {
+    for (int i = 0; i < TextCount; i++) {
+        if (TextKeys[i] == key) {
+            return TextValues[i];
+        }
+    }
+    return key;  // Return key if text not found
+}
+
+// Function to add text to arrays
+void addText(string key, string value) {
+    TextKeys[TextCount] = key;
+    TextValues[TextCount] = value;
+    TextCount++;
+}
+
+// Function to calculate position based on size
+void calculatePosition(int size) {
+    PosX = -(size + 500);
+    PosY = -(size + 500);
+}
+
+// Function to get API URL for current version
+string getApiUrl() {
+    string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
+    string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv\" > \"" + csvFile + "\"";
+    
+    string result;
+    int exitCode = system(curlCmd);
+    int i;  // Déclarer i ici pour toute la fonction
+    
+    if (exitCode != 0) {
+        dlgMessageBox(getText("ERROR_NETWORK") + "\n\n" +
+                     getText("DEBUG_INFO") + "\n" +
+                     "- Exit Code: " + exitCode + "\n" +
+                     "- Command: " + curlCmd + "\n" +
+                     "- ULP Version: " + VERSION + "\n\n" +
+                     "Please check your internet connection.",
+                     getText("BUTTON_OK"));
+        return "";
+    }
+    
+    // Lire le fichier CSV dans un tableau
+    string csvLines[];
+    int nLines = fileread(csvLines, csvFile);
+    
+    if (nLines <= 1) {  // Le fichier doit avoir au moins 2 lignes (en-tête + données)
+        system("rm \"" + csvFile + "\"");
+        return "";
+    }
+    
+    // Trouver la dernière version disponible (première ligne après l'en-tête)
+    if (nLines > 1) {
+        string fields[];
+        int n = strsplit(fields, csvLines[1], ',');
+        if (n >= 4) {
+            LATEST_VERSION = fields[0];  // Première version est la plus récente
+        }
+    }
+    
+    // Parcourir les lignes pour trouver la version courante
+    for (i = 1; i < nLines; i++) {
+        string fields[];
+        int n = strsplit(fields, csvLines[i], ',');
+        if (n >= 4 && fields[0] == VERSION) {
+            // Check if version is supported
+            if (n >= 5 && fields[4] == "0") {
+                dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
+                            "Debug Info:\n" +
+                            "- ULP Version: " + VERSION + "\n" +
+                            "- CSV Line: " + csvLines[i] + "\n\n" +
+                            "Please download the latest version to continue:\n" +
+                            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                            "OK");
+                exit(1);
+            }
+            system("rm \"" + csvFile + "\"");
+            return fields[3];  // api_url is the 4th field
+        }
+    }
+    
+    system("rm \"" + csvFile + "\"");
+    return "";
+}
+
+// Function to trim whitespace from string
+string trim(string str) {
+    string result = "";
+    int start = 0;
+    int end = strlen(str) - 1;
+    
+    // Find first non-space character
+    while (start < strlen(str)) {
+        if (strsub(str, start, 1) != " ") break;
+        start++;
+    }
+    
+    // Find last non-space character
+    while (end >= 0) {
+        if (strsub(str, end, 1) != " ") break;
+        end--;
+    }
+    
+    // Extract the trimmed string
+    if (start <= end) {
+        result = strsub(str, start, end - start + 1);
+    }
+    
+    return result;
+}
+
+// Function to load localized texts
+void loadLocalizedTexts() {
+    LANG = language();
+    if (LANG == "") LANG = "en";  // Default to English
+    
+    string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
+    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/localization.csv\" > \"" + csvFile + "\"";
+    
+    if (system(curlCmd) != 0) {
+        return;  // Silently fall back to key names
+    }
+    
+    string csvLines[];
+    int nLines = fileread(csvLines, csvFile);
+    
+    if (nLines <= 0) {
+        system("rm \"" + csvFile + "\"");
+        return;  // Silently fall back to key names
+    }
+    
+    // Get language column index
+    string headers[];
+    int nCols = strsplit(headers, csvLines[0], ',');
+    int langCol = 1;  // Default to English (column 1)
+    int i;
+    
+    for (i = 0; i < nCols; i++) {
+        string header = trim(headers[i]);
+        if (header == LANG) {
+            langCol = i;
+            break;
+        }
+    }
+    
+    // Load texts
+    for (i = 1; i < nLines; i++) {
+        string fields[];
+        int n = strsplit(fields, csvLines[i], ',');
+        if (n > langCol) {
+            string key = trim(fields[0]);
+            string value = trim(fields[langCol]);
+            addText(key, value);
+        }
+    }
+    
+    system("rm \"" + csvFile + "\"");
 }
 
 void main(void) {
+    // Load localized texts first
+    loadLocalizedTexts();
+    
     // Initialize variables
     string Url = "";
     int Size = 500;
@@ -40,72 +216,125 @@ void main(void) {
         "Top Silkscreen (tPlace)",
         "Bottom Silkscreen (bPlace)",
         "Top Documentation (tDocu)",
-        "Bottom Documentation (bDocu)"
+        "Bottom Documentation (bDocu)",
+        "Document (Docu)"
     };
-    int LayerNumbers[] = {21, 22, 51, 52};
+    int LayerNumbers[] = {21, 22, 51, 52, 48};
     int SelectedLayer = 0;
     
-    // Initialize default positions
-    updateDefaultPosition(Size);
+    // Calculate initial position
+    calculatePosition(Size);
     
     // Dialog for input
-    if (!dlgDialog("QR Code Generator") {
+    if (!dlgDialog(getText("TITLE")) {
         dlgHBoxLayout {
             dlgVBoxLayout {
-                dlgGroup("QR Code Settings") {
-                    dlgLabel("Enter the URL for your QR code:");
+                dlgGroup(getText("SETTINGS_GROUP")) {
+                    dlgLabel(getText("URL_LABEL"));
                     dlgStringEdit(Url);
                     dlgSpacing(10);
-                    dlgLabel("Enter size in mils (250-5000):");
-                    dlgHBoxLayout {
-                        dlgSpinBox(Size, 250, 5000);
-                        dlgPushButton("Update Position") {
-                            updateDefaultPosition(Size);
-                            dlgRedisplay();
-                        }
-                    }
+                    dlgLabel(getText("SIZE_LABEL"));
+                    dlgSpinBox(Size, 250, 5000);
                     dlgSpacing(10);
-                    dlgLabel("Select layer:");
+                    dlgLabel(getText("LAYER_LABEL"));
                     dlgComboBox(LayerNames, SelectedLayer);
                     dlgSpacing(10);
-                    dlgGroup("Position (mils)") {
-                        dlgHBoxLayout {
-                            dlgLabel("X:");
-                            dlgSpinBox(PosX, -50000, 50000);
-                            dlgLabel("Y:");
-                            dlgSpinBox(PosY, -50000, 50000);
-                        }
-                    }
+                    dlgLabel(getText("POSITION_NOTE"));
                 }
                 dlgSpacing(10);
                 dlgHBoxLayout {
                     dlgStretch(1);
-                    dlgPushButton("+OK") dlgAccept();
-                    dlgPushButton("-Cancel") dlgReject();
+                    dlgPushButton("+" + getText("BUTTON_OK")) dlgAccept();
+                    dlgPushButton("-" + getText("BUTTON_CANCEL")) dlgReject();
+                    dlgStretch(1);
+                }
+                dlgHBoxLayout {
+                    string versionText;
+                    if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
+                        // Version plus ancienne détectée
+                        sprintf(versionText, "<font color='#CC0000' size='-1'>v%s (v%s available)</font>", VERSION, LATEST_VERSION);
+                    } else {
+                        // Version à jour
+                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
+                    }
+                    dlgLabel(versionText);
                     dlgStretch(1);
                 }
             }
         }
     } || Url == "") {
-        dlgMessageBox("No URL provided. Operation cancelled.");
+        dlgMessageBox(getText("ERROR_NO_URL"));
         exit(0);
     }
     
-    // Prepare file paths
+    // Update position based on final size
+    calculatePosition(Size);
+    
+    // Prepare and clean up file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using server with curl (MacOS)
-    string curlCmd;
-    sprintf(curlCmd, "curl -s \"https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d\" > \"%s\"", Url, Size, tmpFile);
-    system(curlCmd);
+    // Clean up existing files
+    if (filesize(tmpFile) >= 0) {
+        system("rm \"" + tmpFile + "\"");
+    }
+    if (filesize(scriptFile) >= 0) {
+        system("rm \"" + scriptFile + "\"");
+    }
     
-    // Read QR code data
+    // Get API URL from versions.csv
+    string pythonScriptUrl = getApiUrl();
+    if (pythonScriptUrl == "") {
+        dlgMessageBox("Error: Could not get API URL.\n" +
+                     "Using default URL.",
+                     "OK");
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
+    
+    // Generate QR code using the retrieved URL
+    string curlCmd;
+    sprintf(curlCmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
+    if (system(curlCmd) != 0) {
+        dlgMessageBox("Error: QR Code generation failed\n\n" +
+                     "Debug Info:\n" +
+                     "- API URL: " + pythonScriptUrl + "\n" +
+                     "- Command: " + curlCmd + "\n" +
+                     "Please check your internet connection or try again later.",
+                     "OK");
+        exit(1);
+    }
+    
+    // Verify QR code response
+    if (filesize(tmpFile) <= 0) {
+        dlgMessageBox("Error: Empty response from QR Code service\n\n" +
+                     "Debug Info:\n" +
+                     "- API URL: " + pythonScriptUrl + "\n" +
+                     "Please try again later.",
+                     "OK");
+        exit(1);
+    }
+    
+    // Check response content
+    string firstLine;
+    if (fileread(firstLine, tmpFile) > 0) {
+        if (strstr(firstLine, "Error") >= 0 || strstr(firstLine, "<!DOCTYPE") >= 0) {
+            dlgMessageBox("Error: Invalid response from QR Code service\n\n" +
+                         "Debug Info:\n" +
+                         "- Response: " + firstLine + "\n" +
+                         "- API URL: " + pythonScriptUrl + "\n" +
+                         "Please try again later.",
+                         "OK");
+            system("rm \"" + tmpFile + "\"");
+            exit(1);
+        }
+    }
+    
+    // Read full QR code data
     string lines[];
     int nLines = fileread(lines, tmpFile);
     
     if (nLines <= 0) {
-        dlgMessageBox("Error: Could not generate QR code. Please check your internet connection.");
+        dlgMessageBox("Error: Could not read QR code data.");
         system("rm \"" + tmpFile + "\"");
         exit(1);
     }
@@ -143,7 +372,7 @@ void main(void) {
         }
     }
     
-    // Clean up with rm (MacOS)
+    // Clean up and execute
     system("rm \"" + tmpFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
