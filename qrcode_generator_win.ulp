@@ -30,6 +30,50 @@ void updateDefaultPosition(int size) {
     PosY = -(size + 1000);
 }
 
+// Function to get API URL for current version
+string getApiUrl() {
+    string csvFile = filedir(argv[0]) + "versions.csv";
+    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv' -TimeoutSec 10 -OutFile '%s'\"", csvFile);
+    
+    if (system(curlCmd) != 0) {
+        dlgMessageBox("Debug: Failed to fetch versions.csv\n" +
+                     "ULP Version: " + VERSION + "\n" +
+                     "Using default URL",
+                     "OK");
+        return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
+    
+    string line;
+    // Skip header line
+    lookup(csvFile, 0, line);
+    
+    // Search for current version
+    int lineIndex = 1;
+    while (lookup(csvFile, lineIndex, line)) {
+        string fields[];
+        int n = strsplit(fields, line, ',');
+        if (n >= 4 && fields[0] == VERSION) {
+            // Check if version is supported
+            if (n >= 5 && fields[4] == "0") {
+                dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
+                            "Debug Info:\n" +
+                            "- ULP Version: " + VERSION + "\n" +
+                            "- CSV Line: " + line + "\n\n" +
+                            "Please download the latest version to continue:\n" +
+                            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
+                            "OK");
+                exit(1);
+            }
+            system("del \"" + csvFile + "\"");
+            return fields[3];  // api_url is the 4th field
+        }
+        lineIndex++;
+    }
+    
+    system("del \"" + csvFile + "\"");
+    return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+}
+
 void main(void) {
     // Initialize variables
     string Url = "";
@@ -95,9 +139,12 @@ void main(void) {
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Generate QR code using server
+    // Get API URL from versions.csv
+    string pythonScriptUrl = getApiUrl();
+    
+    // Generate QR code using the retrieved URL
     string curlCmd;
-    sprintf(curlCmd, "powershell -Command \"Invoke-WebRequest -Uri 'https://blaisebarrette.pythonanywhere.com/generate-qr?url=%s&size=%d' -OutFile '%s'\"", Url, Size, tmpFile);
+    sprintf(curlCmd, "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '%s?url=%s&size=%d' -TimeoutSec 10 -OutFile '%s'\"", pythonScriptUrl, Url, Size, tmpFile);
     system(curlCmd);
     
     // Read QR code data
