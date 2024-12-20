@@ -238,6 +238,10 @@ void main(void) {
                     dlgPushButton("-" + getText("BUTTON_CANCEL")) dlgReject();
                     dlgStretch(1);
                 }
+                dlgHBoxLayout {
+                    dlgLabel("<font color='gray' size='-1'>v" + VERSION + "</font>");
+                    dlgStretch(1);
+                }
             }
         }
     } || Url == "") {
