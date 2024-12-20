@@ -1,5 +1,7 @@
 # QR Code Generator ULP for Fusion Electronics
 
+A User Language Program (ULP) for generating QR codes directly on PCB layers in Autodesk Fusion Electronics / Eagle.
+
 ## System Requirements
 
 Choose the appropriate version for your operating system:
@@ -9,11 +11,16 @@ Choose the appropriate version for your operating system:
 ## Features
 
 - QR code generation from URLs
-- Smart automatic placement on PCB
-- Support for multiple layers (Silkscreen, Documentation)
+- Automatic placement in the lower-left quadrant
+- Support for multiple layers:
+  - Top Silkscreen (tPlace)
+  - Bottom Silkscreen (bPlace)
+  - Top Documentation (tDocu)
+  - Bottom Documentation (bDocu)
+  - Document (Docu)
 - Customizable size (250-5000 mils)
-- Manual positioning with X,Y coordinates
 - Cloud-based generation using PythonAnywhere
+- Automatic version checking and updates notification
 - No local installation required
 
 ## Installation
@@ -34,30 +41,32 @@ That's it! No need to install Python or other dependencies.
    - Enter the URL for your QR code
    - Choose the size (in mils)
    - Select the destination layer
-   - Default position will be calculated automatically
-   - You can adjust the position manually if needed
 
 4. Click OK to generate the QR code
 
-## Supported Layers
+## QR Code Placement
 
-- Top Silkscreen (tPlace)
-- Bottom Silkscreen (bPlace)
-- Top Documentation (tDocu)
-
-## Automatic Positioning
-
-The QR code is automatically positioned to avoid conflicts with your design:
-- Default position = -(size + 1000) in X and Y
-- Example: For a 500 mils QR code, position = -1500,-1500
-- This position can be adjusted with the "Update Position" button
+The QR code is automatically positioned in the lower-left quadrant of your board:
+- Default position is calculated based on QR code size
+- Position is automatically adjusted for bottom layers
+- No manual positioning required
 
 ## Technical Notes
 
-- QR code is generated via a secure cloud service (PythonAnywhere)
+- QR code is generated via a secure cloud service
 - Minimum size: 250 mils
 - Maximum size: 5000 mils
-- Positioning range: -50000 to +50000 mils
+- Version checking ensures compatibility
+- Automatic mirroring for bottom layers
+
+## Error Handling
+
+The ULP includes comprehensive error handling for:
+- Network connectivity issues
+- API availability
+- Version compatibility
+- Invalid responses
+- File operations
 
 ## Contributing
 
@@ -66,6 +75,10 @@ Contributions are welcome! Feel free to:
 - Suggest improvements
 - Submit pull requests
 
+## Version History
+
+See [versions.csv](versions.csv) for complete version history and release notes.
+
 ## License
 
 This project is licensed under the MIT License.
@@ -73,4 +86,8 @@ This project is licensed under the MIT License.
 ## Authors
 
 - Blaise Barrette - Initial design and development
-- With help from the Cursor AI team
+
+## Acknowledgments
+
+- Thanks to the PythonAnywhere team for hosting the QR code generation service
+- Thanks to the Eagle/Fusion360 community for feedback and suggestions
