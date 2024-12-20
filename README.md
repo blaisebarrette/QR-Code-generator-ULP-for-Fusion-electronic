@@ -2,12 +2,6 @@
 
 A User Language Program (ULP) for generating QR codes directly on PCB layers in Autodesk Fusion Electronics / Eagle.
 
-## System Requirements
-
-Choose the appropriate version for your operating system:
-- `qrcode_generator_mac.ulp` for MacOS systems
-- `qrcode_generator_win.ulp` for Windows systems
-
 ## Features
 
 - QR code generation from URLs
@@ -21,7 +15,22 @@ Choose the appropriate version for your operating system:
 - Customizable size (250-5000 mils)
 - Cloud-based generation using PythonAnywhere
 - Automatic version checking and updates notification
+- Multi-language support:
+  - English
+  - French
+  - German
+  - Spanish
+  - Italian
+  - Japanese
+  - Korean
+  - Chinese
 - No local installation required
+
+## System Requirements
+
+Choose the appropriate version for your operating system:
+- `qrcode_generator_mac.ulp` for MacOS systems
+- `qrcode_generator_win.ulp` for Windows systems
 
 ## Installation
 
@@ -33,23 +42,15 @@ That's it! No need to install Python or other dependencies.
 ## Usage
 
 1. In Eagle/Fusion360 Electronics, open your PCB design
-2. Run the ULP script:
-   - In Eagle: `File > Run ULP > qrcode_generator_XXX.ulp`
-   - In Fusion360: `Tools > Run ULP > qrcode_generator_XXX.ulp`
-
-3. In the dialog window:
+2. Run the ULP file:
+   - Type `RUN qrcode_generator_mac` (for MacOS)
+   - Or `RUN qrcode_generator_win` (for Windows)
+3. In the dialog:
    - Enter the URL for your QR code
    - Choose the size (in mils)
    - Select the destination layer
-
-4. Click OK to generate the QR code
-
-## QR Code Placement
-
-The QR code is automatically positioned in the lower-left quadrant of your board:
-- Default position is calculated based on QR code size
-- Position is automatically adjusted for bottom layers
-- No manual positioning required
+   
+The QR code will be automatically placed in the lower-left quadrant of your board.
 
 ## Technical Notes
 
@@ -58,6 +59,7 @@ The QR code is automatically positioned in the lower-left quadrant of your board
 - Maximum size: 5000 mils
 - Version checking ensures compatibility
 - Automatic mirroring for bottom layers
+- Language selection based on system settings
 
 ## Error Handling
 
@@ -74,6 +76,7 @@ Contributions are welcome! Feel free to:
 - Report bugs
 - Suggest improvements
 - Submit pull requests
+- Add new language translations
 
 ## Version History
 
@@ -91,3 +94,4 @@ This project is licensed under the MIT License.
 
 - Thanks to the PythonAnywhere team for hosting the QR code generation service
 - Thanks to the Eagle/Fusion360 community for feedback and suggestions
+- Thanks to all contributors for language translations
