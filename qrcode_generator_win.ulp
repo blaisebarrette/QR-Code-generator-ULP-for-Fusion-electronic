@@ -44,22 +44,26 @@ string getApiUrl() {
         return "https://blaisebarrette.pythonanywhere.com/generate-qr";
     }
     
-    string line;
-    // Skip header line
-    lookup(csvFile, 0, line);
+    // Lire le fichier CSV dans un tableau
+    string csvLines[];
+    int nLines = fileread(csvLines, csvFile);
     
-    // Search for current version
-    int lineIndex = 1;
-    while (lookup(csvFile, lineIndex, line)) {
+    if (nLines <= 1) {  // Le fichier doit avoir au moins 2 lignes (en-tête + données)
+        system("del \"" + csvFile + "\"");
+        return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
+    
+    // Parcourir les lignes (en sautant l'en-tête)
+    for (int i = 1; i < nLines; i++) {
         string fields[];
-        int n = strsplit(fields, line, ',');
+        int n = strsplit(fields, csvLines[i], ',');
         if (n >= 4 && fields[0] == VERSION) {
             // Check if version is supported
             if (n >= 5 && fields[4] == "0") {
                 dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
                             "Debug Info:\n" +
                             "- ULP Version: " + VERSION + "\n" +
-                            "- CSV Line: " + line + "\n\n" +
+                            "- CSV Line: " + csvLines[i] + "\n\n" +
                             "Please download the latest version to continue:\n" +
                             "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
                             "OK");
@@ -68,7 +72,6 @@ string getApiUrl() {
             system("del \"" + csvFile + "\"");
             return fields[3];  // api_url is the 4th field
         }
-        lineIndex++;
     }
     
     system("del \"" + csvFile + "\"");
