@@ -1,6 +1,7 @@
 # QR Code Generator temporary files
 qr_script.scr
 qr_temp.txt
+TempCSVFile.csv
 
 # macOS system files
 .DS_Store

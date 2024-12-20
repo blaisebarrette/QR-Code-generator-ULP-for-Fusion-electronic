@@ -1,5 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
+// Version 1.0.1-dev
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
@@ -33,15 +34,22 @@ void updateDefaultPosition(int size) {
 
 // Function to get API URL for current version
 string getApiUrl() {
-    string csvFile = filedir(argv[0]) + "versions.csv";
-    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv\" > \"" + csvFile + "\"";
+    string csvFile = filedir(argv[0]) + "TempCSVFile.csv";
+    string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/V1.0.1-dev/versions.csv\" > \"" + csvFile + "\"";
     
-    if (system(curlCmd) != 0) {
-        dlgMessageBox("Debug: Failed to fetch versions.csv\n" +
-                     "ULP Version: " + VERSION + "\n" +
-                     "Using default URL",
+    string result;
+    int exitCode = system(curlCmd);
+    
+    if (exitCode != 0) {
+        dlgMessageBox("Network Error:\n\n" +
+                     "Failed to fetch version information\n\n" +
+                     "Debug Info:\n" +
+                     "- Exit Code: " + exitCode + "\n" +
+                     "- Command: " + curlCmd + "\n" +
+                     "- ULP Version: " + VERSION + "\n\n" +
+                     "Please check your internet connection.",
                      "OK");
-        return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+        return "";
     }
     
     // Lire le fichier CSV dans un tableau
@@ -50,7 +58,7 @@ string getApiUrl() {
     
     if (nLines <= 1) {  // Le fichier doit avoir au moins 2 lignes (en-tête + données)
         system("rm \"" + csvFile + "\"");
-        return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+        return "";
     }
     
     // Parcourir les lignes (en sautant l'en-tête)
@@ -75,7 +83,7 @@ string getApiUrl() {
     }
     
     system("rm \"" + csvFile + "\"");
-    return "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    return "";
 }
 
 void main(void) {
@@ -139,24 +147,71 @@ void main(void) {
         exit(0);
     }
     
-    // Prepare file paths
+    // Prepare and clean up file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
+    // Clean up existing files
+    if (filesize(tmpFile) >= 0) {
+        system("rm \"" + tmpFile + "\"");
+    }
+    if (filesize(scriptFile) >= 0) {
+        system("rm \"" + scriptFile + "\"");
+    }
+    
     // Get API URL from versions.csv
     string pythonScriptUrl = getApiUrl();
+    if (pythonScriptUrl == "") {
+        dlgMessageBox("Error: Could not get API URL.\n" +
+                     "Using default URL.",
+                     "OK");
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
     
     // Generate QR code using the retrieved URL
     string curlCmd;
     sprintf(curlCmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
-    system(curlCmd);
+    if (system(curlCmd) != 0) {
+        dlgMessageBox("Error: QR Code generation failed\n\n" +
+                     "Debug Info:\n" +
+                     "- API URL: " + pythonScriptUrl + "\n" +
+                     "- Command: " + curlCmd + "\n" +
+                     "Please check your internet connection or try again later.",
+                     "OK");
+        exit(1);
+    }
     
-    // Read QR code data
+    // Verify QR code response
+    if (filesize(tmpFile) <= 0) {
+        dlgMessageBox("Error: Empty response from QR Code service\n\n" +
+                     "Debug Info:\n" +
+                     "- API URL: " + pythonScriptUrl + "\n" +
+                     "Please try again later.",
+                     "OK");
+        exit(1);
+    }
+    
+    // Check response content
+    string firstLine;
+    if (fileread(firstLine, tmpFile) > 0) {
+        if (strstr(firstLine, "Error") >= 0 || strstr(firstLine, "<!DOCTYPE") >= 0) {
+            dlgMessageBox("Error: Invalid response from QR Code service\n\n" +
+                         "Debug Info:\n" +
+                         "- Response: " + firstLine + "\n" +
+                         "- API URL: " + pythonScriptUrl + "\n" +
+                         "Please try again later.",
+                         "OK");
+            system("rm \"" + tmpFile + "\"");
+            exit(1);
+        }
+    }
+    
+    // Read full QR code data
     string lines[];
     int nLines = fileread(lines, tmpFile);
     
     if (nLines <= 0) {
-        dlgMessageBox("Error: Could not generate QR code. Please check your internet connection.");
+        dlgMessageBox("Error: Could not read QR code data.");
         system("rm \"" + tmpFile + "\"");
         exit(1);
     }
@@ -194,7 +249,7 @@ void main(void) {
         }
     }
     
-    // Clean up with rm (MacOS)
+    // Clean up and execute
     system("rm \"" + tmpFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
