@@ -2,6 +2,8 @@
 
 A User Language Program (ULP) for generating QR codes directly on PCB layers in Autodesk Fusion Electronics / Eagle.
 
+![Interface preview](<Interface preview.jpg>)
+
 ## Features
 
 - QR code generation from URLs
