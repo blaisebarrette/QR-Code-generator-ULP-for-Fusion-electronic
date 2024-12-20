@@ -26,10 +26,10 @@
 string VERSION = "1.0.1-dev";
 int PosX, PosY;
 
-// Function to calculate default position based on size
-void updateDefaultPosition(int size) {
-    PosX = -(size + 1000);
-    PosY = -(size + 1000);
+// Function to calculate position based on size
+void calculatePosition(int size) {
+    PosX = -(size + 500);
+    PosY = -(size + 500);
 }
 
 // Function to get API URL for current version
@@ -96,13 +96,14 @@ void main(void) {
         "Top Silkscreen (tPlace)",
         "Bottom Silkscreen (bPlace)",
         "Top Documentation (tDocu)",
-        "Bottom Documentation (bDocu)"
+        "Bottom Documentation (bDocu)",
+        "Document (Docu)"
     };
-    int LayerNumbers[] = {21, 22, 51, 52};
+    int LayerNumbers[] = {21, 22, 51, 52, 48};
     int SelectedLayer = 0;
     
-    // Initialize default positions
-    updateDefaultPosition(Size);
+    // Calculate initial position
+    calculatePosition(Size);
     
     // Dialog for input
     if (!dlgDialog("QR Code Generator") {
@@ -113,25 +114,14 @@ void main(void) {
                     dlgStringEdit(Url);
                     dlgSpacing(10);
                     dlgLabel("Enter size in mils (250-5000):");
-                    dlgHBoxLayout {
-                        dlgSpinBox(Size, 250, 5000);
-                        dlgPushButton("Update Position") {
-                            updateDefaultPosition(Size);
-                            dlgRedisplay();
-                        }
-                    }
+                    dlgSpinBox(Size, 250, 5000);
                     dlgSpacing(10);
                     dlgLabel("Select layer:");
                     dlgComboBox(LayerNames, SelectedLayer);
                     dlgSpacing(10);
-                    dlgGroup("Position (mils)") {
-                        dlgHBoxLayout {
-                            dlgLabel("X:");
-                            dlgSpinBox(PosX, -50000, 50000);
-                            dlgLabel("Y:");
-                            dlgSpinBox(PosY, -50000, 50000);
-                        }
-                    }
+                    dlgLabel("Note: The QR code will be automatically placed\n" +
+                            "in the lower-left quadrant of your board,\n" +
+                            "away from the origin point (0,0).");
                 }
                 dlgSpacing(10);
                 dlgHBoxLayout {
@@ -147,8 +137,8 @@ void main(void) {
         exit(0);
     }
     
-    // Validate parameters
-    validateParameters(Size, PosX, PosY);
+    // Update position based on final size
+    calculatePosition(Size);
     
     // Prepare and clean up file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
