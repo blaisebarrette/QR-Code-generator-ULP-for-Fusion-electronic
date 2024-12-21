@@ -346,7 +346,13 @@ void main(void) {
         printf("SET WIRE_BEND 2;\n");
         
         // Create rectangles for QR code
-        int moduleSize = Size / 21;
+        if (nLines <= 0 || strlen(lines[0]) <= 0) {
+            dlgMessageBox("Error: Invalid QR code data format", "OK");
+            exit(1);
+        }
+        int qrSize = nLines;  // Le QR code est carré, donc nLines = nombre de colonnes
+        int moduleSize = Size / qrSize;  // Adapter la taille des modules au nombre réel de lignes
+        
         // Check if bottom layer is selected (22 or 52)
         int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
         
