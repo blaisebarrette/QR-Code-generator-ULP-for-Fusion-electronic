@@ -343,7 +343,7 @@ void main(void) {
     output(scriptFile, "wt") {
         int qrSize = nLines;
         
-        // Ajuster la taille demandée pour qu'elle soit divisible par le nombre de modules
+        // Adjust the requested size to be divisible by the number of modules
         int adjustedSize = Size;
         while (adjustedSize % qrSize != 0) {
             adjustedSize++;
@@ -366,20 +366,20 @@ void main(void) {
         // Create rectangles for QR code
         int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
         
-        // Calculer le point de départ pour centrer le QR code
-        int startX = PosX - (Size / 2);  // Point de départ basé sur la taille demandée
+        // Calculate the starting point to center the QR code
+        int startX = PosX - (Size / 2);  // Starting point based on the requested size
         int startY = PosY - (Size / 2);
         
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
             for (int col = 0; col < strlen(line); col++) {
                 if (line[col] == '1') {
-                    // Calculer les positions relatives au point de départ
+                    // Calculate the positions relative to the starting point
                     int x1 = startX + (col * moduleSize);
                     int y1 = startY + (row * moduleSize);
                     int x2 = x1 + moduleSize;
                     int y2 = y1 + moduleSize;
-                    
+    
                     // Mirror X coordinates if bottom layer
                     if (isBottomLayer) {
                         int temp_x1 = x1;
