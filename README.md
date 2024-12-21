@@ -72,6 +72,26 @@ The ULP includes comprehensive error handling for:
 - Invalid responses
 - File operations
 
+## Known Issues
+
+### QR Code Size Accuracy
+Currently, there is a known issue where the generated QR codes appear slightly smaller than the requested size. This affects all QR code versions and sizes:
+
+- The difference is more noticeable with larger sizes
+- The QR code maintains its proportions and remains readable
+- The issue appears to be related to the way module sizes are calculated and positioned
+
+We are actively working on resolving this issue. If you have experience with Eagle/Fusion ULP development and would like to contribute to solving this problem, please feel free to:
+1. Submit a pull request with a proposed solution
+2. Open an issue with your findings or suggestions
+3. Contact the maintainers directly
+
+### Technical Details of the Issue
+- QR codes of different versions (21x21 to 177x177 modules) require different module sizes
+- Current calculation attempts to adjust the total size to be perfectly divisible by the number of modules
+- Despite correct calculations, the final rendered size is consistently smaller than requested
+- Debug information is available in the generated script comments
+
 ## Contributing
 
 Contributions are welcome! Feel free to:
@@ -79,6 +99,9 @@ Contributions are welcome! Feel free to:
 - Suggest improvements
 - Submit pull requests
 - Add new language translations
+- Fix the QR code size accuracy issue
+- Add new features
+- Improve error handling
 
 ## Version History
 
