@@ -1,5 +1,17 @@
 # Version History
 
+## Version 1.0.2 (December 22 2024)
+### Improvements
+- Fixed QR code size accuracy issue
+- Removed QR code border for precise sizing
+- QR codes now match exactly the requested dimensions
+- Improved size consistency across all QR versions
+
+### Technical Details
+- Modified server to generate borderless QR codes
+- Maintained exact sizing for both short and long URLs
+- Consistent results for all requested sizes (250-5000 mils)
+
 ## Version 1.0.1 (December 20 2024)
 ### New Features
 - Added multi-language support (8 languages)

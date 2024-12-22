@@ -62,8 +62,8 @@ void addText(string key, string value) {
 
 // Function to calculate position based on size
 void calculatePosition(int size) {
-    PosX = -(size + 500);
-    PosY = -(size + 500);
+    PosX = -(size + 100);
+    PosY = -(size + 100);
 }
 
 // Function to get API URL for current version
