@@ -1,6 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.1
+// Version 1.0.2
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
@@ -33,7 +33,7 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.1";
+string VERSION = "1.0.2";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -62,8 +62,8 @@ void addText(string key, string value) {
 
 // Function to calculate position based on size
 void calculatePosition(int size) {
-    PosX = -(size + 500);
-    PosY = -(size + 500);
+    PosX = -(size + 100);
+    PosY = -(size + 100);
 }
 
 // Function to get API URL for current version
