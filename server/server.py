@@ -30,8 +30,12 @@ def generate_qr():
         
         logger.debug(f"Processing URL: {url}, Size: {size}")
         
-        # Create QR code
-        qr = qrcode.QRCode(version=1, box_size=10, border=4)
+        # Create QR code without border
+        qr = qrcode.QRCode(
+            version=1,
+            box_size=10,
+            border=0
+        )
         qr.add_data(url)
         qr.make(fit=True)
         
