@@ -5,6 +5,7 @@ TempCSVFile.csv
 TempLocalizationFile.csv
 Emplacement des ULP
 qr_script copy.scr
+qr.ulp
 
 # macOS system files
 .DS_Store
