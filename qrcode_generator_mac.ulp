@@ -13,7 +13,7 @@
        "1. Run the ULP and enter your URL<br>"
        "2. Select the size (250-5000 mils)<br>"
        "3. Choose the destination layer<br>"
-       "The QR code will be automatically placed in the lower-left quadrant."
+       "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
        "<p>"
        "<b>Supported Layers:</b><br>"
@@ -354,7 +354,7 @@ void main(void) {
     printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
     printf("SET WIRE_BEND 2;\n");
 
-    // Calculate the starting point to center the QR Code
+    // Calculate the starting point to upper-left of the origin.
     real startX = -(targetSize + 250);
     real startY = 0;
     

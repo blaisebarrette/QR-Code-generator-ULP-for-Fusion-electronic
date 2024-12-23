@@ -56,7 +56,7 @@ That's it! No need to install Python or other dependencies.
    - Specify the size (in mils).
    - Choose the destination layer.
 
-The QR code will be placed automatically in the lower-left quadrant of your board.
+The QR code will be placed automatically in the upper-left quadrant of your board.
 
 ## important
 
