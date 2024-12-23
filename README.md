@@ -7,7 +7,7 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers in 
 ## Features
 
 - QR code generation from URLs
-- Automatic placement in the lower-left quadrant
+- Automatic placement in the upper-left quadrant
 - Support for multiple layers:
   - Top Silkscreen (tPlace)
   - Bottom Silkscreen (bPlace)
