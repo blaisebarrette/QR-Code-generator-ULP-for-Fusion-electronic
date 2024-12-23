@@ -36,23 +36,27 @@ Choose the appropriate version for your operating system:
 
 ## Installation
 
-1. Download the appropriate ULP file for your operating system
-2. Place it in an accessible folder
+1. Download the appropriate ULP file for your operating system.
+2. Create a folder named `ULP` in your `Documents/Autodesk` directory.
+3. Place the ULP file in the `ULP` folder you just created.
+4. Follow this [link](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-change-the-directory-path-for-ULPs-in-Fusion-360-Electronics.html) to learn how to link Fusion Electronics to the ULP folder. You can place future ULP files in this folder for easy access from Fusion Electronics.
 
 That's it! No need to install Python or other dependencies.
 
 ## Usage
 
-1. In Eagle/Fusion360 Electronics, open your PCB design
-2. Run the ULP file:
-   - Type `RUN qrcode_generator_mac` (for MacOS)
-   - Or `RUN qrcode_generator_win` (for Windows)
-3. In the dialog:
-   - Enter the URL for your QR code
-   - Choose the size (in mils)
-   - Select the destination layer
-   
-The QR code will be automatically placed in the lower-left quadrant of your board.
+1. Open your PCB design in Eagle/Fusion360 Electronics.
+2. Click the `Run ULP` icon on the 2D PCB `AUTOMATE` toolbar.
+3. In the ULP browser, select `qrcode_generator_mac` for MacOS or `qrcode_generator_win` for Windows.
+4. Double-click the selected ULP to execute it.
+5. Alternatively, type `run` in the command line and press Enter to open the ULP browser.
+6. You can also type `RUN qrcode_generator_mac` for MacOS or `RUN qrcode_generator_win` for Windows in the command line and press Enter.
+7. In the dialog box:
+   - Input the URL for the QR code.
+   - Specify the size (in mils).
+   - Choose the destination layer.
+
+The QR code will be placed automatically in the lower-left quadrant of your board.
 
 ## important
 
