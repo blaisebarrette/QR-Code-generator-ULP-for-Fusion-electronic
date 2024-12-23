@@ -39,7 +39,7 @@ Choose the appropriate version for your operating system:
 1. Download the appropriate ULP file for your operating system.
 2. Create a folder named `ULP` in your `Documents/Autodesk` directory.
 3. Place the ULP file in the `ULP` folder you just created.
-4. Follow this [link](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-change-the-directory-path-for-ULPs-in-Fusion-360-Electronics.html) to learn how to link Fusion Electronics to the ULP folder. You can place future ULP files in this folder for easy access from Fusion Electronics.
+4. Follow this <a href="https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-change-the-directory-path-for-ULPs-in-Fusion-360-Electronics.html" target="_blank">link</a> to learn how to link Fusion Electronics to the ULP folder. You can place future ULP files in this folder for easy access from Fusion Electronics.
 
 That's it! No need to install Python or other dependencies.
 
