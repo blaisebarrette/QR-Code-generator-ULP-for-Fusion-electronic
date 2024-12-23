@@ -350,7 +350,7 @@ void main(void) {
     printf("# Position: (%d, %d)\n", PosX, PosY);
     printf("\n");
     */
-    
+
     printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
     printf("SET WIRE_BEND 2;\n");
     
