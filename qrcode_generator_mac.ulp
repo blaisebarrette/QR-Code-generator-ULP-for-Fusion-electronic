@@ -60,8 +60,6 @@ void addText(string key, string value) {
     TextCount++;
 }
 
-int positionOffset = 250;
-
 // Function to get API URL for current version
 string getApiUrl() {
     string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
@@ -357,8 +355,8 @@ void main(void) {
     printf("SET WIRE_BEND 2;\n");
 
     // Calculate the starting point to center the QR Code
-    real startX = -(targetSize + positionOffset); // Position offset is 250 mils
-    real startY = -(targetSize + positionOffset); // Position offset is 250 mils
+    real startX = -(targetSize + 250);
+    real startY = 0;
     
     // Creating the rectangles of the QR Code
     int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
