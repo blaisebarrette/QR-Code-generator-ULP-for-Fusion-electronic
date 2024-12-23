@@ -61,7 +61,7 @@ The QR code will be placed automatically in the lower-left quadrant of your boar
 ## important
 
 Important Note on URL Length:
-Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like Bitly to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
+Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like bitly.com to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
 
 Example:
 
