@@ -353,14 +353,21 @@ void main(void) {
     
     printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
     printf("SET WIRE_BEND 2;\n");
-
-    // Calculate the starting point to upper-left of the origin.
-    real startX = -(targetSize + 250);
-    real startY = 0;
     
     // Creating the rectangles of the QR Code
     int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
     
+    // Calculate the starting point to upper-left of the origin.
+    real startX = 0;
+    real startY = 0;
+
+    if(!isBottomLayer) {
+        startX = -(targetSize + 250);
+    } else {
+        startX = 250;
+    }
+
+
     for (int row = 0; row < nLines; row++) {
         string line = lines[row];
         for (int col = 0; col < strlen(line); col++) {
