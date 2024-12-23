@@ -2,7 +2,7 @@
 
 A User Language Program (ULP) for generating QR codes directly on PCB layers in Autodesk Fusion Electronics / Eagle.
 
-![Interface preview](<Media/Interface preview.jpg>)
+![Interface preview](<https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/Interface%20preview.jpg>)
 
 ## Features
 
@@ -63,7 +63,7 @@ Example:
 
 Here is a comparison between QR codes of different sizes, generated from long (left) and short (right) URLs:
 
-![URL size vs complexity](<Media/URL_size_vs_complexity.png>)
+![URL size vs complexity](<https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/URL_size_vs_complexity.png>)
 
 ## Technical Notes
 
