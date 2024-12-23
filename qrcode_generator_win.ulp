@@ -60,11 +60,7 @@ void addText(string key, string value) {
     TextCount++;
 }
 
-// Function to calculate position based on size
-void calculatePosition(int size) {
-    PosX = -(size + 500);
-    PosY = -(size + 500);
-}
+int positionOffset = 250;
 
 // Function to get API URL for current version
 string getApiUrl() {
@@ -222,8 +218,6 @@ void main(void) {
     int LayerNumbers[] = {21, 22, 51, 52, 48};
     int SelectedLayer = 0;
     
-    // Calculate initial position
-    calculatePosition(Size);
     
     // Dialog for input
     if (!dlgDialog(getText("TITLE")) {
@@ -267,8 +261,6 @@ void main(void) {
         exit(0);
     }
     
-    // Update position based on final size
-    calculatePosition(Size);
     
     // Prepare and clean up file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
@@ -365,8 +357,8 @@ void main(void) {
         printf("SET WIRE_BEND 2;\n");
         
         // Calculate the starting point to center the QR Code
-        real startX = real(PosX) - (real(Size) / 2) + (moduleScale / 2);
-        real startY = real(PosY) - (real(Size) / 2) + (moduleScale / 2);
+    real startX = -(targetSize + positionOffset); // Position offset is 250 mils
+    real startY = -(targetSize + positionOffset); // Position offset is 250 mils
     
         // Creating the rectangles of the QR Code
         int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
