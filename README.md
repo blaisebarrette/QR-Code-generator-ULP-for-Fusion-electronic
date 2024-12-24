@@ -8,12 +8,15 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers in 
 
 - QR code generation from URLs
 - Automatic placement in the upper-left quadrant
-- Support for multiple layers:
+- Support for multiple layers in 2D PCB:
   - Top Silkscreen (tPlace)
   - Bottom Silkscreen (bPlace)
   - Top Documentation (tDocu)
   - Bottom Documentation (bDocu)
   - Document (Docu)
+- Support for layers in Schematic:
+  - Info
+  - Documentation
 - Customizable size (250-5000 mils)
 - Cloud-based generation using PythonAnywhere
 - Automatic version checking and updates notification
@@ -45,8 +48,8 @@ That's it! No need to install Python or other dependencies.
 
 ## Usage
 
-1. Open your PCB design in Eagle/Fusion360 Electronics.
-2. Click the `Run ULP` icon on the 2D PCB `AUTOMATE` toolbar.
+1. Open your PCB design or schematic in Eagle/Fusion360 Electronics.
+2. Click the `Run ULP` icon on the 2D PCB or schematic `AUTOMATE` toolbar.
 3. In the ULP browser, select `qrcode_generator_mac` for MacOS or `qrcode_generator_win` for Windows.
 4. Double-click the selected ULP to execute it.
 5. Alternatively, type `run` in the command line and press Enter to open the ULP browser.
@@ -56,7 +59,7 @@ That's it! No need to install Python or other dependencies.
    - Specify the size (in mils).
    - Choose the destination layer.
 
-The QR code will be placed automatically in the upper-left quadrant of your board.
+The QR code will be placed automatically in the upper-left quadrant of the origin.
 
 ## important
 

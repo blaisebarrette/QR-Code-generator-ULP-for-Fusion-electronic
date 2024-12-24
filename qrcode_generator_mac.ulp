@@ -1,12 +1,12 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.2
+// Version 1.0.3
 
 
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
-       "Generate QR codes directly on PCB layers with customizable size.<br>"
-       "This ULP allows you to create QR codes that can be placed on any PCB layer "
+       "Generate QR codes directly on schematic or PCB layers with customizable size.<br>"
+       "This ULP allows you to create QR codes that can be placed on any schematic or PCB layer "
        "in your Fusion Electronics design."
        "</p>"
        "<p>"
@@ -17,12 +17,16 @@
        "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
        "<p>"
-       "<b>Supported Layers:</b><br>"
+       "<b>Supported Layers:</b><br>" 
+       "<b>PCB Layers:</b><br>"
        "- Top Silkscreen (tPlace)<br>"
        "- Bottom Silkscreen (bPlace)<br>"
        "- Top Documentation (tDocu)<br>"
        "- Bottom Documentation (bDocu)<br>"
-       "- Document (Docu)"
+       "- Document (Docu)<br>"
+       "<b>Schematic Layers:</b><br>"
+       "- Info<br>"
+       "- Documentation"
        "</p>"
        "<p>"
        "<b>Note:</b> This version is for MacOS only.<br>"
@@ -34,7 +38,7 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.2";
+string VERSION = "1.0.3";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -198,6 +202,13 @@ void loadLocalizedTexts() {
     system("rm \"" + csvFile + "\"");
 }
 
+// Add right after VERSION declaration, before other global variables
+enum {
+    CONTEXT_BOARD,
+    CONTEXT_SCHEMATIC
+};
+int currentContext;
+
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
@@ -207,14 +218,32 @@ void main(void) {
     int Size = 500;
     
     // Layer selection (simplified to most commonly used layers)
-    string LayerNames[] = {
-        "Top Silkscreen (tPlace)",
-        "Bottom Silkscreen (bPlace)",
-        "Top Documentation (tDocu)",
-        "Bottom Documentation (bDocu)",
-        "Document (Docu)"
-    };
-    int LayerNumbers[] = {21, 22, 51, 52, 48};
+    string LayerNames[];
+    int LayerNumbers[];
+    
+    // Detect context
+    if (board) {
+        currentContext = CONTEXT_BOARD;
+        LayerNames[0] = "Top Silkscreen (tPlace)";
+        LayerNames[1] = "Bottom Silkscreen (bPlace)";
+        LayerNames[2] = "Top Documentation (tDocu)";
+        LayerNames[3] = "Bottom Documentation (bDocu)";
+        LayerNames[4] = "Document (Docu)";
+        LayerNumbers[0] = 21;
+        LayerNumbers[1] = 22;
+        LayerNumbers[2] = 51;
+        LayerNumbers[3] = 52;
+        LayerNumbers[4] = 48;
+    } else if (schematic) {
+        currentContext = CONTEXT_SCHEMATIC;
+        LayerNames[0] = "Info";
+        LayerNames[1] = "Documentation";
+        LayerNumbers[0] = 97;
+        LayerNumbers[1] = 98;
+    } else {
+        dlgMessageBox("Error: This ULP must be run from a board or schematic editor.");
+        exit(1);
+    }
     int SelectedLayer = 0;
     
     
@@ -338,7 +367,12 @@ void main(void) {
     int targetSize = Size;
 
     // Calculate the module size as a floating-point value (scale factor)
-    real moduleScale = real(targetSize) / real(qrSize); // Use "real" for decimal calculation
+    real moduleScale;
+    if (currentContext == CONTEXT_BOARD) {
+        moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
+    } else {
+        moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
+    }
     
     
     printf("# QR Code Generator Script\n");
@@ -356,18 +390,24 @@ void main(void) {
     printf("SET WIRE_BEND 2;\n");
     
     // Creating the rectangles of the QR Code
-    int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
+    int isBottomLayer = currentContext == CONTEXT_BOARD && 
+                       (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
     
-    // Calculate the starting point to upper-left of the origin.
+    // Calculate the starting point
     real startX = 0;
     real startY = 0;
 
-    if(!isBottomLayer) {
-        startX = -(targetSize + 250);
+    if (currentContext == CONTEXT_BOARD) {
+        if(!isBottomLayer) {
+            startX = -(targetSize + 250);
+        } else {
+            startX = 250;
+        }
     } else {
-        startX = 250;
+        // For schematics, place at -0.25 inch from origin
+        // Convert targetSize from mils to inches and add 0.25 inch
+        startX = -(targetSize/1000.0 + 0.5);
     }
-
 
     for (int row = 0; row < nLines; row++) {
         string line = lines[row];
@@ -378,22 +418,25 @@ void main(void) {
                 real y1f = startY + (real(row) * moduleScale);
                 real x2f = x1f + moduleScale;
                 real y2f = y1f + moduleScale;
-                
-                // Convert floating-point coordinates to integers (rounding)
-                int x1 = round(x1f);
-                int y1 = round(y1f);
-                int x2 = round(x2f);
-                int y2 = round(y2f);
 
-                  // Mirror X coordinates if bottom layer
-                 if (isBottomLayer) {
-                     int temp_x1 = x1;
-                     x1 = -x2;
-                     x2 = -temp_x1;
-                 }
-                
-                //printf("# Module at (%d,%d) : float coords(%.3f, %.3f)(%.3f, %.3f) - int coords: (%d,%d)(%d,%d) \n", col, row, x1f, y1f, x2f, y2f, x1, y1, x2, y2);
-                printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
+                if (currentContext == CONTEXT_BOARD) {
+                    // Pour PCB: arrondir à l'entier
+                    int x1 = round(x1f);
+                    int y1 = round(y1f);
+                    int x2 = round(x2f);
+                    int y2 = round(y2f);
+
+                    // Mirror X coordinates if bottom layer
+                    if (isBottomLayer) {
+                        int temp_x1 = x1;
+                        x1 = -x2;
+                        x2 = -temp_x1;
+                    }
+                    
+                    printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
+                } else {
+                    // Pour schéma: garder les décimales
+                    printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
                 }
             }
         }
@@ -403,3 +446,4 @@ void main(void) {
     system("rm \"" + tmpFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
+}
