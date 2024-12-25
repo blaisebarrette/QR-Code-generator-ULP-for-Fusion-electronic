@@ -12,6 +12,9 @@
 - Maintained exact sizing for both short and long URLs
 - Consistent results for all requested sizes (250-5000 mils)
 
+### Bug Fixes
+- Fixed version checking
+
 ## Version 1.0.1 (December 20 2024)
 ### New Features
 - Added multi-language support (8 languages)
