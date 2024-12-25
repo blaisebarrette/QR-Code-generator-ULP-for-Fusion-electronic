@@ -18,7 +18,7 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers and
   - Info
   - Documentation
 - Customizable size 250-5000 mils (0.25 to 5 inches)
-- Cloud-based generation using PythonAnywhere
+- Cloud-based generation using python script hosted on PythonAnywhere
 - Automatic version checking and updates notification
 - Multi-language support:
   - English
@@ -56,7 +56,7 @@ That's it! No need to install Python or other dependencies.
 6. You can also type `RUN qrcode_generator_mac` for MacOS or `RUN qrcode_generator_win` for Windows in the command line and press Enter.
 7. In the dialog box:
    - Input the URL for the QR code.
-   - Specify the size in mils (1 inch = 1000 mils).
+   - Specify the size in mils (1000 mils = 1 inch).
    - Choose the destination layer.
 
 The QR code will be placed automatically in the upper-left quadrant of the origin.
