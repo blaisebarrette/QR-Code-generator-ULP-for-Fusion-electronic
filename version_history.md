@@ -1,5 +1,18 @@
 # Version History
 
+## Version 1.0.3 (December 23 2024)
+### New Features
+- Added support for Schematic environment
+
+### Improvements
+- Enhanced compatibility with Fusion Electronics Schematic editor
+- Improved user interface for Schematic QR code generation
+
+### Technical Details
+- Updated ULP to detect and operate within the Schematic environment
+- Ensured QR code generation works seamlessly on Schematic sheets
+- Maintained all previous functionalities for PCB layers
+
 ## Version 1.0.2 (December 22 2024)
 ### Improvements
 - Fixed QR code size accuracy issue
