@@ -17,7 +17,7 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers and
 - Support for layers in Schematic:
   - Info
   - Documentation
-- Customizable size (250-5000 mils)
+- Customizable size 250-5000 mils (0.25 to 5 inches)
 - Cloud-based generation using PythonAnywhere
 - Automatic version checking and updates notification
 - Multi-language support:
