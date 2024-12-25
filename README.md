@@ -1,6 +1,6 @@
 # QR Code Generator ULP for Fusion Electronics
 
-A User Language Program (ULP) for generating QR codes directly on PCB layers in Autodesk Fusion Electronics / Eagle.
+A User Language Program (ULP) for generating QR codes directly on PCB layers and schematics in Autodesk Fusion Electronics / Eagle.
 
 ![Interface preview](<https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/Interface%20preview.jpg>)
 
@@ -8,14 +8,17 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers in 
 
 - QR code generation from URLs
 - Automatic placement in the upper-left quadrant
-- Support for multiple layers:
+- Support for multiple layers in 2D PCB:
   - Top Silkscreen (tPlace)
   - Bottom Silkscreen (bPlace)
   - Top Documentation (tDocu)
   - Bottom Documentation (bDocu)
   - Document (Docu)
-- Customizable size (250-5000 mils)
-- Cloud-based generation using PythonAnywhere
+- Support for layers in Schematic:
+  - Info
+  - Documentation
+- Customizable size 250-5000 mils (0.25 to 5 inches)
+- Cloud-based generation using python script hosted on PythonAnywhere
 - Automatic version checking and updates notification
 - Multi-language support:
   - English
@@ -45,23 +48,23 @@ That's it! No need to install Python or other dependencies.
 
 ## Usage
 
-1. Open your PCB design in Eagle/Fusion360 Electronics.
-2. Click the `Run ULP` icon on the 2D PCB `AUTOMATE` toolbar.
+1. Open your PCB design or schematic in Eagle/Fusion360 Electronics.
+2. Click the `Run ULP` icon on the 2D PCB or schematic `AUTOMATE` toolbar.
 3. In the ULP browser, select `qrcode_generator_mac` for MacOS or `qrcode_generator_win` for Windows.
 4. Double-click the selected ULP to execute it.
 5. Alternatively, type `run` in the command line and press Enter to open the ULP browser.
 6. You can also type `RUN qrcode_generator_mac` for MacOS or `RUN qrcode_generator_win` for Windows in the command line and press Enter.
 7. In the dialog box:
    - Input the URL for the QR code.
-   - Specify the size (in mils).
+   - Specify the size in mils (1000 mils = 1 inch).
    - Choose the destination layer.
 
-The QR code will be placed automatically in the upper-left quadrant of your board.
+The QR code will be placed automatically in the upper-left quadrant of the origin.
 
 ## important
 
 Important Note on URL Length:
-Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like bitly.com to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
+Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like <a href="http://bitly.com">bitly.com</a> to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
 
 Example:
 
@@ -72,8 +75,8 @@ Here is a comparison between QR codes of different sizes, generated from long (l
 ## Technical Notes
 
 - QR code is generated via a secure cloud service
-- Minimum size: 250 mils
-- Maximum size: 5000 mils
+- Minimum size: 250 mils (0.25 inch / 6.25 mm)
+- Maximum size: 5000 mils (5 inch / 127 mm)
 - Version checking ensures compatibility
 - Automatic mirroring for bottom layers
 - Language selection based on system settings
@@ -94,7 +97,6 @@ Contributions are welcome! Feel free to:
 - Suggest improvements
 - Submit pull requests
 - Add new language translations
-- Fix the QR code size accuracy issue
 - Add new features
 - Improve error handling
 

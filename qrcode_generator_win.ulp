@@ -1,27 +1,31 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.2
+// Version 1.0.3
 
 #usage "<b>QR Code Generator for Windows</b>\n"
        "<p>"
-       "Generate QR codes directly on PCB layers with customizable size.<br>"
-       "This ULP allows you to create QR codes that can be placed on any PCB layer "
+       "Generate QR codes directly on schematic or PCB layers with customizable size.<br>"
+       "This ULP allows you to create QR codes that can be placed on any schematic or PCB layer "
        "in your Fusion Electronics design."
        "</p>"
        "<p>"
        "<b>Usage:</b><br>"
        "1. Run the ULP and enter your URL<br>"
-       "2. Select the size (250-5000 mils)<br>"
+       "2. Select the size (from 250 mils to 5000 mils, where 1000  mils = 1 inch)<br>"
        "3. Choose the destination layer<br>"
        "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
        "<p>"
        "<b>Supported Layers:</b><br>"
+       "<b>PCB Layers:</b><br>"
        "- Top Silkscreen (tPlace)<br>"
        "- Bottom Silkscreen (bPlace)<br>"
        "- Top Documentation (tDocu)<br>"
        "- Bottom Documentation (bDocu)<br>"
-       "- Document (Docu)"
+       "- Document (Docu)<br>"
+       "<b>Schematic Layers:</b><br>"
+       "- Info<br>"
+       "- Documentation"
        "</p>"
        "<p>"
        "<b>Note:</b> This version is for Windows only.<br>"
@@ -33,10 +37,17 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.2";
+string VERSION = "1.0.3";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
+
+// Context constants and variable
+enum {
+    CONTEXT_BOARD,
+    CONTEXT_SCHEMATIC
+};
+int currentContext;
 
 // Arrays for localization
 string TextKeys[];    // Store keys
@@ -97,6 +108,8 @@ string getApiUrl() {
             LATEST_VERSION = fields[0];  // Première version est la plus récente
         }
     }
+        
+    string api_url = "";  // Variable pour stocker l'URL de l'API
     
     // Parcourir les lignes pour trouver la version courante
     for (i = 1; i < nLines; i++) {
@@ -114,13 +127,13 @@ string getApiUrl() {
                             "OK");
                 exit(1);
             }
-            system("del \"" + csvFile + "\"");
-            return fields[3];  // api_url is the 4th field
+            api_url = fields[3];  // Stocker l'URL de l'API
+            break;
         }
     }
     
     system("del \"" + csvFile + "\"");
-    return "";
+    return api_url;  // Retourner l'URL de l'API
 }
 
 // Function to trim whitespace from string
@@ -200,20 +213,47 @@ void loadLocalizedTexts() {
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
+        
+    // Get API URL and latest version from versions.csv BEFORE creating the dialog
+    string pythonScriptUrl = getApiUrl();
+    if (pythonScriptUrl == "") {
+        dlgMessageBox("Error: Could not get API URL.\n" +
+                     "Using default URL.",
+                     "OK");
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
     
     // Initialize variables
     string Url = "";
     int Size = 500;
     
     // Layer selection (simplified to most commonly used layers)
-    string LayerNames[] = {
-        "Top Silkscreen (tPlace)",
-        "Bottom Silkscreen (bPlace)",
-        "Top Documentation (tDocu)",
-        "Bottom Documentation (bDocu)",
-        "Document (Docu)"
-    };
-    int LayerNumbers[] = {21, 22, 51, 52, 48};
+    string LayerNames[];
+    int LayerNumbers[];
+    
+    // Detect context
+    if (board) {
+        currentContext = CONTEXT_BOARD;
+        LayerNames[0] = "Top Silkscreen (tPlace)";
+        LayerNames[1] = "Bottom Silkscreen (bPlace)";
+        LayerNames[2] = "Top Documentation (tDocu)";
+        LayerNames[3] = "Bottom Documentation (bDocu)";
+        LayerNames[4] = "Document (Docu)";
+        LayerNumbers[0] = 21;
+        LayerNumbers[1] = 22;
+        LayerNumbers[2] = 51;
+        LayerNumbers[3] = 52;
+        LayerNumbers[4] = 48;
+    } else if (schematic) {
+        currentContext = CONTEXT_SCHEMATIC;
+        LayerNames[0] = "Info";
+        LayerNames[1] = "Documentation";
+        LayerNumbers[0] = 97;
+        LayerNumbers[1] = 98;
+    } else {
+        dlgMessageBox("Error: This ULP must be run from a board or schematic editor.");
+        exit(1);
+    }
     int SelectedLayer = 0;
     
     
@@ -244,7 +284,7 @@ void main(void) {
                     string versionText;
                     if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
                         // Version plus ancienne détectée
-                        sprintf(versionText, "<font color='#CC0000' size='-1'>v%s (v%s available)</font>", VERSION, LATEST_VERSION);
+                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font> <font color='#CC0000' size='-1'>(<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest'>v%s available</a>)</font>", VERSION, LATEST_VERSION);
                     } else {
                         // Version à jour
                         sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
@@ -270,15 +310,6 @@ void main(void) {
     }
     if (filesize(scriptFile) >= 0) {
         system("del \"" + scriptFile + "\"");
-    }
-    
-    // Get API URL from versions.csv
-    string pythonScriptUrl = getApiUrl();
-    if (pythonScriptUrl == "") {
-        dlgMessageBox("Error: Could not get API URL.\n" +
-                     "Using default URL.",
-                     "OK");
-        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
     }
     
     // Generate QR code using the retrieved URL
@@ -337,7 +368,12 @@ void main(void) {
     int targetSize = Size;
 
     // Calculate the module size as a floating-point value (scale factor)
-    real moduleScale = real(targetSize) / real(qrSize); // Use "real" for decimal calculation
+    real moduleScale;
+    if (currentContext == CONTEXT_BOARD) {
+        moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
+    } else {
+        moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
+    }
 
         
         printf("# QR Code Generator Script\n");
@@ -355,18 +391,24 @@ void main(void) {
         printf("SET WIRE_BEND 2;\n");
     
         // Creating the rectangles of the QR Code
-        int isBottomLayer = (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
-            
-    // Calculate the starting point to upper-left of the origin.
+    int isBottomLayer = currentContext == CONTEXT_BOARD && 
+                       (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
+    
+    // Calculate the starting point
     real startX = 0;
     real startY = 0;
 
-    if(!isBottomLayer) {
-        startX = -(targetSize + 250);
+    if (currentContext == CONTEXT_BOARD) {
+        if(!isBottomLayer) {
+            startX = -(targetSize + 250);
+        } else {
+            startX = 250;
+        }
     } else {
-        startX = 250;
+        // For schematics, place at -0.25 inch from origin
+        // Convert targetSize from mils to inches and add 0.25 inch
+        startX = -(targetSize/1000.0 + 0.5);
     }
-    
         
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
@@ -378,7 +420,8 @@ void main(void) {
                 real x2f = x1f + moduleScale;
                 real y2f = y1f + moduleScale;
                 
-                // Convert floating-point coordinates to integers (rounding)
+                if (currentContext == CONTEXT_BOARD) {
+                    // Pour PCB: arrondir à l'entier
                 int x1 = round(x1f);
                 int y1 = round(y1f);
                 int x2 = round(x2f);
@@ -391,8 +434,11 @@ void main(void) {
                         x2 = -temp_x1;
                     }
                     
-                    //printf("# Module at (%d,%d) : float coords(%.3f, %.3f)(%.3f, %.3f) - int coords: (%d,%d)(%d,%d) \n", col, row, x1f, y1f, x2f, y2f, x1, y1, x2, y2);
                     printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
+                } else {
+                    // Pour schéma: garder les décimales
+                    printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
+                }
                 }
             }
         }
