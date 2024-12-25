@@ -2,7 +2,6 @@
 // This ULP generates QR codes directly on PCB layers
 // Version 1.0.3
 
-
 #usage "<b>QR Code Generator for MacOS</b>\n"
        "<p>"
        "Generate QR codes directly on schematic or PCB layers with customizable size.<br>"
@@ -17,7 +16,7 @@
        "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
        "<p>"
-       "<b>Supported Layers:</b><br>" 
+       "<b>Supported Layers:</b><br>"
        "<b>PCB Layers:</b><br>"
        "- Top Silkscreen (tPlace)<br>"
        "- Bottom Silkscreen (bPlace)<br>"
@@ -42,6 +41,13 @@ string VERSION = "1.0.3";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
+
+// Context constants and variable
+enum {
+    CONTEXT_BOARD,
+    CONTEXT_SCHEMATIC
+};
+int currentContext;
 
 // Arrays for localization
 string TextKeys[];    // Store keys
@@ -103,6 +109,8 @@ string getApiUrl() {
         }
     }
     
+    string api_url = "";  // Variable pour stocker l'URL de l'API
+    
     // Parcourir les lignes pour trouver la version courante
     for (i = 1; i < nLines; i++) {
         string fields[];
@@ -119,13 +127,13 @@ string getApiUrl() {
                             "OK");
                 exit(1);
             }
-            system("rm \"" + csvFile + "\"");
-            return fields[3];  // api_url is the 4th field
+            api_url = fields[3];  // Stocker l'URL de l'API
+            break;
         }
     }
     
-    system("rm \"" + csvFile + "\"");
-    return "";
+    system("rm \"" + csvFile + "\"");  // Nettoyer le fichier après avoir tout lu
+    return api_url;  // Retourner l'URL de l'API
 }
 
 // Function to trim whitespace from string
@@ -202,16 +210,18 @@ void loadLocalizedTexts() {
     system("rm \"" + csvFile + "\"");
 }
 
-// Add right after VERSION declaration, before other global variables
-enum {
-    CONTEXT_BOARD,
-    CONTEXT_SCHEMATIC
-};
-int currentContext;
-
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
+    
+    // Get API URL and latest version from versions.csv BEFORE creating the dialog
+    string pythonScriptUrl = getApiUrl();
+    if (pythonScriptUrl == "") {
+        dlgMessageBox("Error: Could not get API URL.\n" +
+                     "Using default URL.",
+                     "OK");
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
     
     // Initialize variables
     string Url = "";
@@ -274,7 +284,7 @@ void main(void) {
                     string versionText;
                     if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
                         // Version plus ancienne détectée
-                        sprintf(versionText, "<font color='#CC0000' size='-1'>v%s (v%s available)</font>", VERSION, LATEST_VERSION);
+                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font> <font color='#CC0000' size='-1'>(<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest'>v%s available</a>)</font>", VERSION, LATEST_VERSION);
                     } else {
                         // Version à jour
                         sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
@@ -300,15 +310,6 @@ void main(void) {
     }
     if (filesize(scriptFile) >= 0) {
         system("rm \"" + scriptFile + "\"");
-    }
-    
-    // Get API URL from versions.csv
-    string pythonScriptUrl = getApiUrl();
-    if (pythonScriptUrl == "") {
-        dlgMessageBox("Error: Could not get API URL.\n" +
-                     "Using default URL.",
-                     "OK");
-        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
     }
     
     // Generate QR code using the retrieved URL
@@ -418,14 +419,14 @@ void main(void) {
                 real y1f = startY + (real(row) * moduleScale);
                 real x2f = x1f + moduleScale;
                 real y2f = y1f + moduleScale;
-
+                
                 if (currentContext == CONTEXT_BOARD) {
                     // Pour PCB: arrondir à l'entier
-                    int x1 = round(x1f);
-                    int y1 = round(y1f);
-                    int x2 = round(x2f);
-                    int y2 = round(y2f);
-
+                int x1 = round(x1f);
+                int y1 = round(y1f);
+                int x2 = round(x2f);
+                int y2 = round(y2f);
+                    
                     // Mirror X coordinates if bottom layer
                     if (isBottomLayer) {
                         int temp_x1 = x1;
@@ -438,6 +439,7 @@ void main(void) {
                     // Pour schéma: garder les décimales
                     printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
                 }
+                }
             }
         }
     }
@@ -446,4 +448,3 @@ void main(void) {
     system("rm \"" + tmpFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
 } 
-}

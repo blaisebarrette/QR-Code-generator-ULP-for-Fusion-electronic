@@ -42,6 +42,13 @@ string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
 
+// Context constants and variable
+enum {
+    CONTEXT_BOARD,
+    CONTEXT_SCHEMATIC
+};
+int currentContext;
+
 // Arrays for localization
 string TextKeys[];    // Store keys
 string TextValues[];  // Store corresponding values
@@ -101,6 +108,8 @@ string getApiUrl() {
             LATEST_VERSION = fields[0];  // Première version est la plus récente
         }
     }
+        
+    string api_url = "";  // Variable pour stocker l'URL de l'API
     
     // Parcourir les lignes pour trouver la version courante
     for (i = 1; i < nLines; i++) {
@@ -118,13 +127,13 @@ string getApiUrl() {
                             "OK");
                 exit(1);
             }
-            system("del \"" + csvFile + "\"");
-            return fields[3];  // api_url is the 4th field
+            api_url = fields[3];  // Stocker l'URL de l'API
+            break;
         }
     }
     
     system("del \"" + csvFile + "\"");
-    return "";
+    return api_url;  // Retourner l'URL de l'API
 }
 
 // Function to trim whitespace from string
@@ -201,16 +210,18 @@ void loadLocalizedTexts() {
     system("del \"" + csvFile + "\"");
 }
 
-// Add right after VERSION declaration, before other global variables
-enum {
-    CONTEXT_BOARD,
-    CONTEXT_SCHEMATIC
-};
-int currentContext;
-
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
+        
+    // Get API URL and latest version from versions.csv BEFORE creating the dialog
+    string pythonScriptUrl = getApiUrl();
+    if (pythonScriptUrl == "") {
+        dlgMessageBox("Error: Could not get API URL.\n" +
+                     "Using default URL.",
+                     "OK");
+        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
+    }
     
     // Initialize variables
     string Url = "";
@@ -273,7 +284,7 @@ void main(void) {
                     string versionText;
                     if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
                         // Version plus ancienne détectée
-                        sprintf(versionText, "<font color='#CC0000' size='-1'>v%s (v%s available)</font>", VERSION, LATEST_VERSION);
+                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font> <font color='#CC0000' size='-1'>(<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest'>v%s available</a>)</font>", VERSION, LATEST_VERSION);
                     } else {
                         // Version à jour
                         sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
@@ -299,15 +310,6 @@ void main(void) {
     }
     if (filesize(scriptFile) >= 0) {
         system("del \"" + scriptFile + "\"");
-    }
-    
-    // Get API URL from versions.csv
-    string pythonScriptUrl = getApiUrl();
-    if (pythonScriptUrl == "") {
-        dlgMessageBox("Error: Could not get API URL.\n" +
-                     "Using default URL.",
-                     "OK");
-        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
     }
     
     // Generate QR code using the retrieved URL
@@ -437,6 +439,7 @@ void main(void) {
                     // Pour schéma: garder les décimales
                     printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
                 }
+                }
             }
         }
     }
@@ -444,5 +447,4 @@ void main(void) {
     // Clean up and execute
     system("del \"" + tmpFile + "\"");
     exit("SCRIPT '" + scriptFile + "'");
-    }
 } 
