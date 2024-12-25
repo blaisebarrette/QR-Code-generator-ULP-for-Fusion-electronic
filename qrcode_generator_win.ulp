@@ -11,7 +11,7 @@
        "<p>"
        "<b>Usage:</b><br>"
        "1. Run the ULP and enter your URL<br>"
-       "2. Select the size (250-5000 mils)<br>"
+       "2. Select the size (from 250 mils to 5000 mils, where 1000  mils = 1 inch)<br>"
        "3. Choose the destination layer<br>"
        "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
