@@ -8,6 +8,9 @@
 - Enhanced compatibility with Fusion Electronics Schematic editor
 - Improved user interface for Schematic QR code generation
 
+### Bug Fixes
+- Fixed version checking
+
 ### Technical Details
 - Updated ULP to detect and operate within the Schematic environment
 - Ensured QR code generation works seamlessly on Schematic sheets
