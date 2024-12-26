@@ -120,4 +120,4 @@ This project is licensed under the MIT License.
 - Thanks to all contributors for language translations
 
 ## Little tap in the back!
-<a href="http://www.buymeacoffe.com/blaisebarrette">Buy me a coffe!</a>
+[Buy me a coffe!](https://buymeacoffee.com/blaisebarrette)
