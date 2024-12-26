@@ -39,12 +39,22 @@ Choose the appropriate version for your operating system:
 
 ## Installation
 
-1. Download the appropriate ULP file for your operating system.
-2. Create a folder named `ULP` in your `Documents/Autodesk` directory.
-3. Place the ULP file in the `ULP` folder you just created.
-4. Follow this <a href="https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-change-the-directory-path-for-ULPs-in-Fusion-360-Electronics.html" target="_blank">link</a> to learn how to link Fusion Electronics to the ULP folder. You can place future ULP files in this folder for easy access from Fusion Electronics.
+![Place ULP on your hard drive](Media/Install_ULP.png)
 
-That's it! No need to install Python or other dependencies.
+- Open Fusion 360
+- Click on your profile icon in the top right corner
+- Click on `Preferences`
+- In the left panel, expand `Electronics` and click on `Directory`
+- Find `Directory for ULPs` and click on the three dots
+- Choose the folder where you want Fusion Electronics to find the ULPs
+  - I suggest creating a folder named `ULP` in your `Documents/Autodesk` directory
+- Alternatively, you can uncheck `Use Library.io for ULP by default`
+- Choose the appropriate version for your operating system:
+  - [qrcode_generator_mac.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for MacOS systems
+  - [qrcode_generator_win.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for Windows systems
+- Place the ULP file in the `ULP` folder you just created
+
+That's it! The ULP is now available from Fusion Electronics!
 
 ## Usage
 
