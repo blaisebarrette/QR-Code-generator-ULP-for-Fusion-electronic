@@ -51,7 +51,7 @@ A computer Running MacOS or Windows with Fusion 360 installed.
 - Choose the appropriate version for your operating system:
   - [qrcode_generator_mac.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for MacOS systems
   - [qrcode_generator_win.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for Windows systems
-- Place the ULP file in the `ULP` folder you just created
+- Place the ULP file in the `ULP` folder you chose in the previous step
 
 That's it! The ULP is now available from Fusion Electronics!
 
