@@ -34,8 +34,8 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers and
 ## System Requirements
 
 Choose the appropriate version for your operating system:
-- [qrcode_generator_mac.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/latest/download/qrcode_generator_mac.zip) for MacOS systems
-- [qrcode_generator_win.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/latest/download/qrcode_generator_win.zip) for Windows systems
+- [qrcode_generator_mac.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for MacOS systems
+- [qrcode_generator_win.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.3/qr_code_generator_mac.zip) for Windows systems
 
 ## Installation
 
