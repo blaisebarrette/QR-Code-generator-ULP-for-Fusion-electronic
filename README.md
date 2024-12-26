@@ -118,3 +118,6 @@ This project is licensed under the MIT License.
 - Thanks to the PythonAnywhere team for hosting the QR code generation service
 - Thanks to the Eagle/Fusion360 community for feedback and suggestions
 - Thanks to all contributors for language translations
+
+## Little tap in the back!
+<a href="http://www.buymeacoffe.com/blaisebarrette">Buy me a coffe!</a>
