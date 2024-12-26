@@ -64,7 +64,7 @@ The QR code will be placed automatically in the upper-left quadrant of the origi
 ## important
 
 Important Note on URL Length:
-Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like <a href="http://bitly.com">bitly.com</a> to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
+Generating a QR code from a long URL increases its complexity. Highly complex QR codes may become difficult to scan if printed too small. If your PCB design has limited space for the QR code, consider using a service like <a href="http://bitly.com" target="_blank">bitly.com</a> to shorten the URL before generating the QR code. This reduces the code’s complexity, making it easier to scan when printed.
 
 Example:
 
@@ -118,3 +118,6 @@ This project is licensed under the MIT License.
 - Thanks to the PythonAnywhere team for hosting the QR code generation service
 - Thanks to the Eagle/Fusion360 community for feedback and suggestions
 - Thanks to all contributors for language translations
+
+## Little tap in the back!
+<a href="https://buymeacoffee.com/blaisebarrette" target="_blank">Buy me a coffe!</a>
