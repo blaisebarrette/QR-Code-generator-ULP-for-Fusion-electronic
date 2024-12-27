@@ -99,7 +99,7 @@ string getApiUrl() {
         system("del \"" + csvFile + "\"");
         return "";
     }
-
+    
     // Trouver la dernière version disponible (première ligne après l'en-tête)
     if (nLines > 1) {
         string fields[];
@@ -108,7 +108,7 @@ string getApiUrl() {
             LATEST_VERSION = fields[0];  // Première version est la plus récente
         }
     }
-        
+    
     string api_url = "";  // Variable pour stocker l'URL de l'API
     
     // Parcourir les lignes pour trouver la version courante
@@ -213,7 +213,7 @@ void loadLocalizedTexts() {
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
-        
+    
     // Get API URL and latest version from versions.csv BEFORE creating the dialog
     string pythonScriptUrl = getApiUrl();
     if (pythonScriptUrl == "") {
@@ -256,7 +256,6 @@ void main(void) {
     }
     int SelectedLayer = 0;
     
-    
     // Dialog for input
     if (!dlgDialog(getText("TITLE")) {
         dlgHBoxLayout {
@@ -298,7 +297,6 @@ void main(void) {
         dlgMessageBox(getText("ERROR_NO_URL"));
         exit(0);
     }
-    
     
     // Prepare and clean up file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
@@ -349,32 +347,31 @@ void main(void) {
             exit(1);
         }
     }
-
+    
     // Read full QR code data
-        string lines[];
-        int nLines = fileread(lines, tmpFile);
-        
-        if (nLines <= 0) {
-            dlgMessageBox("Error: Could not read QR code data.");
-            system("rm \"" + tmpFile + "\"");
-            exit(1);
-        }
+    string lines[];
+    int nLines = fileread(lines, tmpFile);
+    
+    if (nLines <= 0) {
+        dlgMessageBox("Error: Could not read QR code data.");
+        system("del \"" + tmpFile + "\"");
+        exit(1);
+    }
     
     // Generate Eagle script
     output(scriptFile, "wt") {
         int qrSize = nLines;
         
         // Use the requested size as the base and no longer adjust it
-    int targetSize = Size;
-
-    // Calculate the module size as a floating-point value (scale factor)
-    real moduleScale;
-    if (currentContext == CONTEXT_BOARD) {
-        moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
-    } else {
-        moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
-    }
-
+        int targetSize = Size;
+        
+        // Calculate the module size as a floating-point value (scale factor)
+        real moduleScale;
+        if (currentContext == CONTEXT_BOARD) {
+            moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
+        } else {
+            moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
+        }
         
         printf("# QR Code Generator Script\n");
         /*
@@ -389,56 +386,56 @@ void main(void) {
         
         printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
         printf("SET WIRE_BEND 2;\n");
-    
+        
         // Creating the rectangles of the QR Code
-    int isBottomLayer = currentContext == CONTEXT_BOARD && 
-                       (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
-    
-    // Calculate the starting point
-    real startX = 0;
-    real startY = 0;
-
-    if (currentContext == CONTEXT_BOARD) {
-        if(!isBottomLayer) {
-            startX = -(targetSize + 250);
+        int isBottomLayer = currentContext == CONTEXT_BOARD && 
+                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
+        
+        // Calculate the starting point
+        real startX = 0;
+        real startY = 0;
+        
+        if (currentContext == CONTEXT_BOARD) {
+            if(!isBottomLayer) {
+                startX = -(targetSize + 250);
+            } else {
+                startX = 250;
+            }
         } else {
-            startX = 250;
+            // For schematics, place at -0.25 inch from origin
+            // Convert targetSize from mils to inches and add 0.25 inch
+            startX = -(targetSize/1000.0 + 0.5);
         }
-    } else {
-        // For schematics, place at -0.25 inch from origin
-        // Convert targetSize from mils to inches and add 0.25 inch
-        startX = -(targetSize/1000.0 + 0.5);
-    }
         
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
             for (int col = 0; col < strlen(line); col++) {
                 if (line[col] == '1') {
                     // Calculate the positions relative to the starting point
-                real x1f = startX + (real(col) * moduleScale);
-                real y1f = startY + (real(row) * moduleScale);
-                real x2f = x1f + moduleScale;
-                real y2f = y1f + moduleScale;
-                
-                if (currentContext == CONTEXT_BOARD) {
-                    // Pour PCB: arrondir à l'entier
-                int x1 = round(x1f);
-                int y1 = round(y1f);
-                int x2 = round(x2f);
-                int y2 = round(y2f);
+                    real x1f = startX + (real(col) * moduleScale);
+                    real y1f = startY + (real(row) * moduleScale);
+                    real x2f = x1f + moduleScale;
+                    real y2f = y1f + moduleScale;
                     
-                    // Mirror X coordinates if bottom layer
-                    if (isBottomLayer) {
-                        int temp_x1 = x1;
-                        x1 = -x2;
-                        x2 = -temp_x1;
+                    if (currentContext == CONTEXT_BOARD) {
+                        // Pour PCB: arrondir à l'entier
+                        int x1 = round(x1f);
+                        int y1 = round(y1f);
+                        int x2 = round(x2f);
+                        int y2 = round(y2f);
+                        
+                        // Mirror X coordinates if bottom layer
+                        if (isBottomLayer) {
+                            int temp_x1 = x1;
+                            x1 = -x2;
+                            x2 = -temp_x1;
+                        }
+                        
+                        printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
+                    } else {
+                        // Pour schéma: garder les décimales
+                        printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
                     }
-                    
-                    printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
-                } else {
-                    // Pour schéma: garder les décimales
-                    printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
-                }
                 }
             }
         }
