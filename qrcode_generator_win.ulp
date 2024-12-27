@@ -2,7 +2,7 @@
 // This ULP generates QR codes directly on PCB layers
 // Version 1.0.3
 
-#usage "<b>QR Code Generator for Windows</b>\n"
+#usage "<b>QR Code Generator for Windows V1.0.3</b>\n"
        "<p>"
        "Generate QR codes directly on schematic or PCB layers with customizable size.<br>"
        "This ULP allows you to create QR codes that can be placed on any schematic or PCB layer "
