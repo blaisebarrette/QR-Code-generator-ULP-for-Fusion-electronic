@@ -7,6 +7,7 @@
 ### Improvements
 - Enhanced compatibility with Fusion Electronics Library Symbol and Footprint editor
 - Improved user interface for Symbol and Footprint QR code generation
+- Modified layer naming to be more consistent with Fusion Electronics interface
 
 ## Version 1.0.3 (December 23 2024)
 ### New Features
