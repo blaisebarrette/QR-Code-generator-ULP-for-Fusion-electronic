@@ -1,23 +1,25 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.3
+// Version 1.0.4
 
-#usage "<b>QR Code Generator for MacOS V1.0.3</b>\n"
+#usage "<b>QR Code Generator for MacOS <small>V1.0.4</small></b>\n"
        "<p>"
-       "Generate QR codes directly on schematic or PCB layers with customizable size.<br>"
-       "This ULP allows you to create QR codes that can be placed on any schematic or PCB layer "
+       "Generate QR codes directly on PCB and Schematic in Electronics design and in Footprint and Symbol in Electronics Library with customizable size.<br>"
+       "This ULP allows you to create QR codes that can be placed on various layers "
        "in your Fusion Electronics design."
        "</p>"
        "<p>"
        "<b>Usage:</b><br>"
        "1. Run the ULP and enter your URL<br>"
-       "2. Select the size (from 250 mils to 5000 mils, where 1000  mils = 1 inch)<br>"
+       "2. Select the size (from 250 mils to 5000 mils, where 1000 mils = 1 inch)<br>"
        "3. Choose the destination layer<br>"
        "The QR code will be automatically placed in the upper-left quadrant."
        "</p>"
        "<p>"
-       "<b>Supported Layers:</b><br>"
-       "<b>PCB Layers:</b><br>"
+       "<b>Supported Contexts and Layers:</b><br>"
+       "<b>PCB/Footprint Layers:</b><br>"
+       "- Copper Top (top)<br>"
+       "- Copper Bottom (bottom)<br>"
        "- Top Silkscreen (tPlace)<br>"
        "- Bottom Silkscreen (bPlace)<br>"
        "- Top Documentation (tDocu)<br>"
@@ -25,7 +27,11 @@
        "- Document (Docu)<br>"
        "<b>Schematic Layers:</b><br>"
        "- Info<br>"
-       "- Documentation"
+       "- Documentation<br>"
+       "<b>Symbol Layers:</b><br>"
+       "- Symbols<br>"
+       "- Info<br>"
+       "- Guide"
        "</p>"
        "<p>"
        "<b>Note:</b> This version is for MacOS only.<br>"
@@ -37,7 +43,7 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.3";
+string VERSION = "1.0.4";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -45,7 +51,9 @@ string LANG;  // Current language code
 // Context constants and variable
 enum {
     CONTEXT_BOARD,
-    CONTEXT_SCHEMATIC
+    CONTEXT_SCHEMATIC,
+    CONTEXT_PACKAGE,
+    CONTEXT_SYMBOL
 };
 int currentContext;
 
@@ -210,6 +218,22 @@ void loadLocalizedTexts() {
     system("rm \"" + csvFile + "\"");
 }
 
+// Function to get context name
+string getContextName() {
+    switch (currentContext) {
+        case CONTEXT_BOARD:
+            return "Board";
+        case CONTEXT_SCHEMATIC:
+            return "Schematic";
+        case CONTEXT_PACKAGE:
+            return "Footprint";
+        case CONTEXT_SYMBOL:
+            return "Symbol";
+        default:
+            return "Unknown";
+    }
+}
+
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
@@ -230,32 +254,69 @@ void main(void) {
     // Layer selection (simplified to most commonly used layers)
     string LayerNames[];
     int LayerNumbers[];
+    int SelectedLayer = 0;  // Initialize SelectedLayer here
     
-    // Detect context
+    // Detect context and set available layers
     if (board) {
         currentContext = CONTEXT_BOARD;
-        LayerNames[0] = "Top Silkscreen (tPlace)";
-        LayerNames[1] = "Bottom Silkscreen (bPlace)";
-        LayerNames[2] = "Top Documentation (tDocu)";
-        LayerNames[3] = "Bottom Documentation (bDocu)";
-        LayerNames[4] = "Document (Docu)";
-        LayerNumbers[0] = 21;
-        LayerNumbers[1] = 22;
-        LayerNumbers[2] = 51;
-        LayerNumbers[3] = 52;
-        LayerNumbers[4] = 48;
+        LayerNames[0] = "Copper Top (top)";
+        LayerNames[1] = "Copper Bottom (bottom)";
+        LayerNames[2] = "Top Silkscreen (tPlace)";
+        LayerNames[3] = "Bottom Silkscreen (bPlace)";
+        LayerNames[4] = "Top Documentation (tDocu)";
+        LayerNames[5] = "Bottom Documentation (bDocu)";
+        LayerNames[6] = "Document (Docu)";
+        LayerNumbers[0] = 1;
+        LayerNumbers[1] = 16;
+        LayerNumbers[2] = 21;
+        LayerNumbers[3] = 22;
+        LayerNumbers[4] = 51;
+        LayerNumbers[5] = 52;
+        LayerNumbers[6] = 48;
     } else if (schematic) {
         currentContext = CONTEXT_SCHEMATIC;
         LayerNames[0] = "Info";
         LayerNames[1] = "Documentation";
         LayerNumbers[0] = 97;
         LayerNumbers[1] = 98;
+    } else if (library) {
+        // Dans l'éditeur de bibliothèque, nous devons vérifier le type d'éditeur actif
+        if (package) {
+            currentContext = CONTEXT_PACKAGE;
+            LayerNames[0] = "Copper Top (top)";
+            LayerNames[1] = "Copper Bottom (bottom)";
+            LayerNames[2] = "Top Silkscreen (tPlace)";
+            LayerNames[3] = "Bottom Silkscreen (bPlace)";
+            LayerNames[4] = "Top Documentation (tDocu)";
+            LayerNames[5] = "Bottom Documentation (bDocu)";
+            LayerNames[6] = "Document (Docu)";
+            LayerNumbers[0] = 1;
+            LayerNumbers[1] = 16;
+            LayerNumbers[2] = 21;
+            LayerNumbers[3] = 22;
+            LayerNumbers[4] = 51;
+            LayerNumbers[5] = 52;
+            LayerNumbers[6] = 48;
+        } else if (symbol) {
+            currentContext = CONTEXT_SYMBOL;
+            LayerNames[0] = "Symbols";
+            LayerNames[1] = "Info";
+            LayerNames[2] = "Guide";
+            LayerNumbers[0] = 94;
+            LayerNumbers[1] = 97;
+            LayerNumbers[2] = 98;
+        } else {
+            dlgMessageBox("Error: In Library editor, this ULP must be run from either Footprint or Symbol editor.",
+                         "OK");
+            exit(1);
+        }
     } else {
-        dlgMessageBox("Error: This ULP must be run from a board or schematic editor.");
+        dlgMessageBox("Error: This ULP must be run from a valid editor window.\n" +
+                     "Supported contexts: Board, Schematic, Footprint, or Symbol",
+                     "OK");
         exit(1);
     }
-    int SelectedLayer = 0;
-    
+
     // Dialog for input
     if (!dlgDialog(getText("TITLE")) {
         dlgHBoxLayout {
@@ -367,35 +428,27 @@ void main(void) {
         
         // Calculate the module size as a floating-point value (scale factor)
         real moduleScale;
-        if (currentContext == CONTEXT_BOARD) {
+        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
             moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
         } else {
             moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
         }
         
         printf("# QR Code Generator Script\n");
-        /*
-        // Debuging
-        printf("# Generated by QR Code ULP v%s\n", VERSION);
-        printf("# QR Code Size: %d x %d modules\n", qrSize, qrSize);
-        printf("# Original Size: %d mils\n", Size);
-        printf("# Module Size (float): %.3f mils\n", moduleScale); // Afficher la taille du module (valeur flottante)
-        printf("# Position: (%d, %d)\n", PosX, PosY);
-        printf("\n");
-        */
-        
         printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
         printf("SET WIRE_BEND 2;\n");
         
         // Creating the rectangles of the QR Code
-        int isBottomLayer = currentContext == CONTEXT_BOARD && 
-                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52);
+        int isBottomLayer = (currentContext == CONTEXT_BOARD && 
+                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52)) ||
+                           (currentContext == CONTEXT_PACKAGE && 
+                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52));
         
         // Calculate the starting point
         real startX = 0;
         real startY = 0;
         
-        if (currentContext == CONTEXT_BOARD) {
+        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
             if(!isBottomLayer) {
                 startX = -(targetSize + 250);
             } else {
@@ -417,7 +470,7 @@ void main(void) {
                     real x2f = x1f + moduleScale;
                     real y2f = y1f + moduleScale;
                     
-                    if (currentContext == CONTEXT_BOARD) {
+                    if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
                         // Pour PCB: arrondir à l'entier
                         int x1 = round(x1f);
                         int y1 = round(y1f);

@@ -1,5 +1,13 @@
 # Version History
 
+## Version 1.0.4 (December 28 2024)
+### New Features
+- Added support for Symbol and footprint in Electronics Library
+
+### Improvements
+- Enhanced compatibility with Fusion Electronics Library Symbol and Footprint editor
+- Improved user interface for Symbol and Footprint QR code generation
+
 ## Version 1.0.3 (December 23 2024)
 ### New Features
 - Added support for Schematic environment
