@@ -259,13 +259,13 @@ void main(void) {
     // Detect context and set available layers
     if (board) {
         currentContext = CONTEXT_BOARD;
-        LayerNames[0] = "Copper Top (top)";
-        LayerNames[1] = "Copper Bottom (bottom)";
-        LayerNames[2] = "Top Silkscreen (tPlace)";
-        LayerNames[3] = "Bottom Silkscreen (bPlace)";
-        LayerNames[4] = "Top Documentation (tDocu)";
-        LayerNames[5] = "Bottom Documentation (bDocu)";
-        LayerNames[6] = "Document (Docu)";
+        LayerNames[0] = "Top";
+        LayerNames[1] = "Bottom";
+        LayerNames[2] = "SilkscreenTop";
+        LayerNames[3] = "SilkscreenBottom";
+        LayerNames[4] = "DocumentTop";
+        LayerNames[5] = "DocumentBottom";
+        LayerNames[6] = "Document";
         LayerNumbers[0] = 1;
         LayerNumbers[1] = 16;
         LayerNumbers[2] = 21;
@@ -276,20 +276,20 @@ void main(void) {
     } else if (schematic) {
         currentContext = CONTEXT_SCHEMATIC;
         LayerNames[0] = "Info";
-        LayerNames[1] = "Documentation";
+        LayerNames[1] = "Guide";
         LayerNumbers[0] = 97;
         LayerNumbers[1] = 98;
     } else if (library) {
         // Dans l'éditeur de bibliothèque, nous devons vérifier le type d'éditeur actif
         if (package) {
             currentContext = CONTEXT_PACKAGE;
-            LayerNames[0] = "Copper Top (top)";
-            LayerNames[1] = "Copper Bottom (bottom)";
-            LayerNames[2] = "Top Silkscreen (tPlace)";
-            LayerNames[3] = "Bottom Silkscreen (bPlace)";
-            LayerNames[4] = "Top Documentation (tDocu)";
-            LayerNames[5] = "Bottom Documentation (bDocu)";
-            LayerNames[6] = "Document (Docu)";
+            LayerNames[0] = "Top";
+            LayerNames[1] = "Bottom";
+            LayerNames[2] = "SilkscreenTop";
+            LayerNames[3] = "SilkscreenBottom";
+            LayerNames[4] = "DocumentTop";
+            LayerNames[5] = "DocumentBottom";
+            LayerNames[6] = "Document";
             LayerNumbers[0] = 1;
             LayerNumbers[1] = 16;
             LayerNumbers[2] = 21;
