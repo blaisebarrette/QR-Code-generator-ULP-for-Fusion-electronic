@@ -1,6 +1,6 @@
 # Version History
 
-## Version 1.0.4 (December 28 2024)
+## Version 1.0.4 (December 29 2024)
 ### New Features
 - Added support for Symbol and footprint in Electronics Library
 
