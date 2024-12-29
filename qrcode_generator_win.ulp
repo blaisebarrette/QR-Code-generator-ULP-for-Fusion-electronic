@@ -177,7 +177,8 @@ void loadLocalizedTexts() {
     if (LANG == "") LANG = "en";  // Default to English
     
     string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
-    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv' -TimeoutSec 10 -OutFile '%s'\"", csvFile);
+    string curlCmd;
+    sprintf(curlCmd, "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv' -TimeoutSec 10 -OutFile '%s'\"", csvFile);
     
     if (system(curlCmd) != 0) {
         return;  // Silently fall back to key names
