@@ -1,6 +1,6 @@
 # QR Code Generator ULP for Fusion Electronics
 
-A User Language Program (ULP) for generating QR codes directly on PCB layers and schematics in Autodesk Fusion Electronics / Eagle.
+A User Language Program (ULP) for generating QR codes directly on PCBs and schematics in Electronics Design, as well as footprint and symbols in the Electronics Library, in Autodesk Fusion Electronics / Eagle.
 
 ![Interface preview](<https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/Interface%20preview.jpg>)
 
@@ -8,15 +8,21 @@ A User Language Program (ULP) for generating QR codes directly on PCB layers and
 
 - QR code generation from URLs
 - Automatic placement in the upper-left quadrant
-- Support for multiple layers in 2D PCB:
-  - Top Silkscreen (tPlace)
-  - Bottom Silkscreen (bPlace)
-  - Top Documentation (tDocu)
-  - Bottom Documentation (bDocu)
-  - Document (Docu)
+- Support for multiple layers in 2D PCB and footprint:
+  - Top Copper
+  - Bottom Copper
+  - Top Silkscreen
+  - Bottom Silkscreen
+  - Top Documentation
+  - Bottom Documentation
+  - Document
 - Support for layers in Schematic:
   - Info
   - Documentation
+- Support for layers in Symbol:
+  - Symbol
+  - Guide
+  - Info
 - Customizable size 250-5000 mils (0.25 to 5 inches)
 - Cloud-based generation using python script hosted on PythonAnywhere
 - Automatic version checking and updates notification
@@ -57,8 +63,8 @@ That's it! The ULP is now available from Fusion Electronics!
 
 ## Usage
 
-1. Open your PCB design or schematic in Eagle/Fusion360 Electronics.
-2. Click the `Run ULP` icon on the 2D PCB or schematic `AUTOMATE` toolbar.
+1. Open your 2D PCB or schematic in Electronics Design or a symbol or footprint in Electronics Library in Eagle/Fusion360 Electronics.
+2. Click the `Run ULP` icon on the 2D PCB, schematic, footprint or symbol `AUTOMATE` toolbar.
 3. In the ULP browser, select `qrcode_generator_mac` for MacOS or `qrcode_generator_win` for Windows.
 4. Double-click the selected ULP to execute it.
 5. Alternatively, type `run` in the command line and press Enter to open the ULP browser.
