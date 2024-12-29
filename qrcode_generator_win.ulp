@@ -82,7 +82,8 @@ void addText(string key, string value) {
 // Function to get API URL for current version
 string getApiUrl() {
     string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
-    string curlCmd = sprintf("powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv' -TimeoutSec 10 -OutFile '%s'\"", csvFile);
+    string curlCmd;
+    sprintf(curlCmd, "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv' -TimeoutSec 10 -OutFile '%s'\"", csvFile);
     
     string result;
     int exitCode = system(curlCmd);
