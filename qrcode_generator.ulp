@@ -98,7 +98,7 @@ string getApiUrl() {
     
     string cmd;
     if (IsWindows()) {
-        cmd = "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+        cmd = "powershell -Command \"Start-Process powershell -NoNewWindow -ArgumentList '-Command', '$ProgressPreference = \\\"SilentlyContinue\\\"; Invoke-WebRequest -Uri \\\"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\\\" -TimeoutSec 10 -OutFile \\\"" + csvFile + "\\\"' -Wait\"";
     } else {
         cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
     }
@@ -200,7 +200,7 @@ void loadLocalizedTexts() {
     
     string cmd;
     if (IsWindows()) {
-        cmd = "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+        cmd = "powershell -Command \"Start-Process powershell -NoNewWindow -ArgumentList '-Command', '$ProgressPreference = \\\"SilentlyContinue\\\"; Invoke-WebRequest -Uri \\\"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\\\" -TimeoutSec 10 -OutFile \\\"" + csvFile + "\\\"' -Wait\"";
     } else {
         cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
     }
@@ -395,7 +395,7 @@ void main(void) {
     // Generate QR code using the retrieved URL
     string cmd;
     if (IsWindows()) {
-        sprintf(cmd, "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '%s?url=%s&size=%d' -TimeoutSec 10 -OutFile '%s'\"", pythonScriptUrl, Url, Size, tmpFile);
+        sprintf(cmd, "powershell -Command \"Start-Process powershell -NoNewWindow -ArgumentList '-Command', '$ProgressPreference = \\\"SilentlyContinue\\\"; Invoke-WebRequest -Uri \\\"%s?url=%s&size=%d\\\" -TimeoutSec 10 -OutFile \\\"%s\\\"' -Wait\"", pythonScriptUrl, Url, Size, tmpFile);
     } else {
         sprintf(cmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
     }
