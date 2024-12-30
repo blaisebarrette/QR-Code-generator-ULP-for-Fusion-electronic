@@ -5,12 +5,13 @@ TempCSVFile.csv
 TempLocalizationFile.csv
 Emplacement des ULP USER
 Emplacement des ULP Fusion
-Make Realease archives.app
-qr_code_generator_mac.zip
-qr_code_generator_win.zip
-
-qr_script copy.scr
+Create release archive.app
+qr_temp_autodelete.txt
+qr_temp_autodelete.txt
+TempVersionsFile.csv
+qr_temp_autodelete.txt
 qr.ulp
+Backup
 
 # macOS system files
 .DS_Store

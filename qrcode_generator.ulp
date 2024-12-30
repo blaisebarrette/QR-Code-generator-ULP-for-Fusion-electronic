@@ -1,8 +1,8 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.0.4
+// Version 1.1.0
 
-#usage "<b>QR Code Generator for MacOS <small>V1.0.4</small></b>\n"
+#usage "<b>QR Code Generator for Fusion Electronics <small>V1.1.0</small></b>\n"
        "<p>"
        "Generate QR codes directly on PCB and Schematic in Electronics design and in Footprint and Symbol in Electronics Library with customizable size.<br>"
        "This ULP allows you to create QR codes that can be placed on various layers "
@@ -27,15 +27,15 @@
        "- Document (Docu)<br>"
        "<b>Schematic Layers:</b><br>"
        "- Info<br>"
-       "- Documentation<br>"
+       "- Guide<br>"
        "<b>Symbol Layers:</b><br>"
        "- Symbols<br>"
        "- Info<br>"
        "- Guide"
        "</p>"
        "<p>"
-       "<b>Note:</b> This version is for MacOS only.<br>"
-       "For Windows version, visit: "
+       "<b>Note:</b> This ULP works on both Windows and MacOS.<br>"
+       "For more information, visit: "
        "<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>GitHub Repository</a>"
        "</p>"
        "<author>Author: <b>Blaise Barrette</b></author>"
@@ -43,7 +43,7 @@
 #require 4.11
 
 // Global variables
-string VERSION = "1.0.4";
+string VERSION = "1.1.0";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -61,6 +61,14 @@ int currentContext;
 string TextKeys[];    // Store keys
 string TextValues[];  // Store corresponding values
 int TextCount = 0;    // Number of texts loaded
+
+// Function to detect Windows OS
+int IsWindows() {
+    //Returns 1, if EAGLE is running under Windows (0 for Linux/Mac)
+    if ((strsub(argv[0],0,1)=="/") && (strsub(argv[0],0,2)!="//"))
+        return 0;
+    return 1;
+}
 
 // Function to get localized text by key
 string getText(string key) {
@@ -82,44 +90,53 @@ void addText(string key, string value) {
 // Function to get API URL for current version
 string getApiUrl() {
     string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
-    string curlCmd = "curl -m 10 -s -w \"%{http_code}\" \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
     
-    string result;
-    int exitCode = system(curlCmd);
-    int i;  // Déclarer i ici pour toute la fonction
+    // Create a temporary file that will be auto-deleted
+    output(csvFile, "wD") {
+        printf("");  // Create empty file
+    }
+    
+    string cmd;
+    if (IsWindows()) {
+        cmd = "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+    } else {
+        cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
+    }
+    
+    int exitCode = system(cmd);
+    int i;
     
     if (exitCode != 0) {
         dlgMessageBox(getText("ERROR_NETWORK") + "\n\n" +
                      getText("DEBUG_INFO") + "\n" +
                      "- Exit Code: " + exitCode + "\n" +
-                     "- Command: " + curlCmd + "\n" +
+                     "- Command: " + cmd + "\n" +
                      "- ULP Version: " + VERSION + "\n\n" +
                      "Please check your internet connection.",
                      getText("BUTTON_OK"));
         return "";
     }
     
-    // Lire le fichier CSV dans un tableau
+    // Read the CSV file into an array
     string csvLines[];
     int nLines = fileread(csvLines, csvFile);
     
-    if (nLines <= 1) {  // Le fichier doit avoir au moins 2 lignes (en-tête + données)
-        system("rm \"" + csvFile + "\"");
+    if (nLines <= 1) {  // File must have at least 2 lines (header + data)
         return "";
     }
     
-    // Trouver la dernière version disponible (première ligne après l'en-tête)
+    // Find the latest version available (first line after header)
     if (nLines > 1) {
         string fields[];
         int n = strsplit(fields, csvLines[1], ',');
         if (n >= 4) {
-            LATEST_VERSION = fields[0];  // Première version est la plus récente
+            LATEST_VERSION = fields[0];  // First version is the most recent
         }
     }
     
-    string api_url = "";  // Variable pour stocker l'URL de l'API
+    string api_url = "";  // Variable to store the API URL
     
-    // Parcourir les lignes pour trouver la version courante
+    // Loop through lines to find current version
     for (i = 1; i < nLines; i++) {
         string fields[];
         int n = strsplit(fields, csvLines[i], ',');
@@ -135,13 +152,12 @@ string getApiUrl() {
                             "OK");
                 exit(1);
             }
-            api_url = fields[3];  // Stocker l'URL de l'API
+            api_url = fields[3];  // Store the API URL
             break;
         }
     }
     
-    system("rm \"" + csvFile + "\"");  // Nettoyer le fichier après avoir tout lu
-    return api_url;  // Retourner l'URL de l'API
+    return api_url;  // Return the API URL
 }
 
 // Function to trim whitespace from string
@@ -176,17 +192,28 @@ void loadLocalizedTexts() {
     if (LANG == "") LANG = "en";  // Default to English
     
     string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
-    string curlCmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
     
-    if (system(curlCmd) != 0) {
+    // Create a temporary file that will be auto-deleted
+    output(csvFile, "wD") {
+        printf("");  // Create empty file
+    }
+    
+    string cmd;
+    if (IsWindows()) {
+        cmd = "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+    } else {
+        cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
+    }
+    
+    if (system(cmd) != 0) {
         return;  // Silently fall back to key names
     }
     
+    // Read the CSV file into an array
     string csvLines[];
     int nLines = fileread(csvLines, csvFile);
     
     if (nLines <= 0) {
-        system("rm \"" + csvFile + "\"");
         return;  // Silently fall back to key names
     }
     
@@ -214,8 +241,6 @@ void loadLocalizedTexts() {
             addText(key, value);
         }
     }
-    
-    system("rm \"" + csvFile + "\"");
 }
 
 // Function to get context name
@@ -280,7 +305,6 @@ void main(void) {
         LayerNumbers[0] = 97;
         LayerNumbers[1] = 98;
     } else if (library) {
-        // Dans l'éditeur de bibliothèque, nous devons vérifier le type d'éditeur actif
         if (package) {
             currentContext = CONTEXT_PACKAGE;
             LayerNames[0] = "Top";
@@ -316,7 +340,7 @@ void main(void) {
                      "OK");
         exit(1);
     }
-
+    
     // Dialog for input
     if (!dlgDialog(getText("TITLE")) {
         dlgHBoxLayout {
@@ -343,10 +367,10 @@ void main(void) {
                 dlgHBoxLayout {
                     string versionText;
                     if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
-                        // Version plus ancienne détectée
+                        // Older version detected
                         sprintf(versionText, "<font color='gray' size='-1'>v%s</font> <font color='#CC0000' size='-1'>(<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest'>v%s available</a>)</font>", VERSION, LATEST_VERSION);
                     } else {
-                        // Version à jour
+                        // Version is up to date
                         sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
                     }
                     dlgLabel(versionText);
@@ -359,26 +383,28 @@ void main(void) {
         exit(0);
     }
     
-    // Prepare and clean up file paths
+    // Prepare file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Clean up existing files
-    if (filesize(tmpFile) >= 0) {
-        system("rm \"" + tmpFile + "\"");
-    }
-    if (filesize(scriptFile) >= 0) {
-        system("rm \"" + scriptFile + "\"");
+    // Create temporary files that will be auto-deleted
+    output(tmpFile, "wD") {
+        printf("");  // Create empty file
     }
     
     // Generate QR code using the retrieved URL
-    string curlCmd;
-    sprintf(curlCmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
-    if (system(curlCmd) != 0) {
+    string cmd;
+    if (IsWindows()) {
+        cmd = "powershell -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '" + pythonScriptUrl + "?url=" + Url + "&size=" + Size + "' -TimeoutSec 10 -OutFile '" + tmpFile + "'\"";
+    } else {
+        sprintf(cmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
+    }
+    // Exécuter la commande
+    if (system(cmd) != 0) {
         dlgMessageBox("Error: QR Code generation failed\n\n" +
                      "Debug Info:\n" +
                      "- API URL: " + pythonScriptUrl + "\n" +
-                     "- Command: " + curlCmd + "\n" +
+                     "- Command: " + cmd + "\n" +
                      "Please check your internet connection or try again later.",
                      "OK");
         exit(1);
@@ -404,23 +430,21 @@ void main(void) {
                          "- API URL: " + pythonScriptUrl + "\n" +
                          "Please try again later.",
                          "OK");
-            system("rm \"" + tmpFile + "\"");
             exit(1);
         }
     }
     
-    // Read full QR code data
+    // Read QR code data
     string lines[];
     int nLines = fileread(lines, tmpFile);
     
     if (nLines <= 0) {
         dlgMessageBox("Error: Could not read QR code data.");
-        system("rm \"" + tmpFile + "\"");
         exit(1);
     }
     
     // Generate Eagle script
-    output(scriptFile, "wt") {
+    output(scriptFile, "wD") {
         int qrSize = nLines;
         
         // Use the requested size as the base and no longer adjust it
@@ -429,9 +453,9 @@ void main(void) {
         // Calculate the module size as a floating-point value (scale factor)
         real moduleScale;
         if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-            moduleScale = real(targetSize) / real(qrSize); // Pour PCB: 1 unité = 1 mil
+            moduleScale = real(targetSize) / real(qrSize); // For PCB: 1 unit = 1 mil
         } else {
-            moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // Pour schéma: convertir mils en pouces
+            moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // For schematic: convert mils to inches
         }
         
         printf("# QR Code Generator Script\n");
@@ -471,7 +495,7 @@ void main(void) {
                     real y2f = y1f + moduleScale;
                     
                     if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-                        // Pour PCB: arrondir à l'entier
+                        // For PCB: round to integer
                         int x1 = round(x1f);
                         int y1 = round(y1f);
                         int x2 = round(x2f);
@@ -486,7 +510,7 @@ void main(void) {
                         
                         printf("RECT (%d %d) (%d %d);\n", x1, y1, x2, y2);
                     } else {
-                        // Pour schéma: garder les décimales
+                        // For schematic: keep decimals
                         printf("RECT (%.2f %.2f) (%.2f %.2f);\n", x1f, y1f, x2f, y2f);
                     }
                 }
@@ -494,7 +518,6 @@ void main(void) {
         }
     }
     
-    // Clean up and execute
-    system("rm \"" + tmpFile + "\"");
+    // Execute script and exit
     exit("SCRIPT '" + scriptFile + "'");
 } 
