@@ -1,5 +1,17 @@
 # Version History
 
+## Version 1.1.0 (December 31 2024)
+### New Features
+- There is now only one version of ULP for both Windows and MacOS
+
+### Improvements
+- Less System calls
+- Use native ULP language for most file operations
+- Improved Windows compatibility using VBScript for network operations
+- Better UTF-8 handling for localization files
+- Eliminated command window flashing on Windows
+- More reliable network operations across both platforms
+
 ## Version 1.0.4 (December 29 2024)
 ### New Features
 - Added support for Symbol and footprint in Electronics Library

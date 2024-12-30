@@ -54,9 +54,7 @@ A computer Running MacOS or Windows with Fusion 360 installed.
   - You can use the default folder if you want. Copy the path and place the ULP file there
   - Alternatively, I suggest creating a folder named `ULP` in your `Documents/Autodesk` directory
 - You can uncheck `Use Library.io for ULP by default` if you want Fusion Electronics to use the ULP from your folder instead of the Library.io
-- Choose the appropriate version for your operating system:
-  - [qrcode_generator_mac.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.4/qr_code_generator_mac.zip) for MacOS systems
-  - [qrcode_generator_win.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.0.4/qr_code_generator_win.zip) for Windows systems
+- Download: [qrcode_generator.zip](https://github.com/blaisebarrette/QR-Code-generator-ULP-for-Fusion-electronic/releases/download/V1.1.0/qr_code_generator.zip)
 - Place the ULP file in the `ULP` folder you chose in the previous step
 
 That's it! The ULP is now available from Fusion Electronics!
@@ -65,10 +63,10 @@ That's it! The ULP is now available from Fusion Electronics!
 
 1. Open your 2D PCB or schematic in Electronics Design or a symbol or footprint in Electronics Library in Eagle/Fusion360 Electronics.
 2. Click the `Run ULP` icon on the 2D PCB, schematic, footprint or symbol `AUTOMATE` toolbar.
-3. In the ULP browser, select `qrcode_generator_mac` for MacOS or `qrcode_generator_win` for Windows.
+3. In the ULP browser, select `qrcode_generator.
 4. Double-click the selected ULP to execute it.
 5. Alternatively, type `run` in the command line and press Enter to open the ULP browser.
-6. You can also type `RUN qrcode_generator_mac` for MacOS or `RUN qrcode_generator_win` for Windows in the command line and press Enter.
+6. You can also type `RUN qrcode_generator` in the command line and press Enter.
 7. In the dialog box:
    - Input the URL for the QR code.
    - Specify the size in mils (1000 mils = 1 inch).
