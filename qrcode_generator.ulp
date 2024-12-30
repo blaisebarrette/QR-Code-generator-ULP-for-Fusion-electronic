@@ -98,7 +98,21 @@ string getApiUrl() {
     
     string cmd;
     if (IsWindows()) {
-        cmd = "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+        // Create a temporary VBS script
+        string vbsFile = filedir(argv[0]) + "temp_version_check.vbs";
+        output(vbsFile, "wD") {
+            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
+            printf("http.open \"GET\", \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\", False\n");
+            printf("http.send\n");
+            printf("If http.Status = 200 Then\n");
+            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
+            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", csvFile);
+            printf("    file.Write(http.responseText)\n");
+            printf("    file.Close\n");
+            printf("End If\n");
+            printf("Set http = Nothing\n");
+        }
+        cmd = "wscript \"" + vbsFile + "\"";
     } else {
         cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
     }
@@ -200,7 +214,21 @@ void loadLocalizedTexts() {
     
     string cmd;
     if (IsWindows()) {
-        cmd = "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv' -TimeoutSec 10 -OutFile '" + csvFile + "'\"";
+        // Create a temporary VBS script
+        string vbsFile = filedir(argv[0]) + "temp_localization.vbs";
+        output(vbsFile, "wD") {
+            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
+            printf("http.open \"GET\", \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\", False\n");
+            printf("http.send\n");
+            printf("If http.Status = 200 Then\n");
+            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
+            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", csvFile);
+            printf("    file.Write(http.responseText)\n");
+            printf("    file.Close\n");
+            printf("End If\n");
+            printf("Set http = Nothing\n");
+        }
+        cmd = "wscript \"" + vbsFile + "\"";
     } else {
         cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
     }
@@ -395,7 +423,21 @@ void main(void) {
     // Generate QR code using the retrieved URL
     string cmd;
     if (IsWindows()) {
-        sprintf(cmd, "powershell -WindowStyle Hidden -Command \"$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '%s?url=%s&size=%d' -TimeoutSec 10 -OutFile '%s'\"", pythonScriptUrl, Url, Size, tmpFile);
+        // Create a temporary VBS script
+        string vbsFile = filedir(argv[0]) + "temp_request.vbs";
+        output(vbsFile, "wD") {
+            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
+            printf("http.open \"GET\", \"%s?url=%s&size=%d\", False\n", pythonScriptUrl, Url, Size);
+            printf("http.send\n");
+            printf("If http.Status = 200 Then\n");
+            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
+            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", tmpFile);
+            printf("    file.Write(http.responseText)\n");
+            printf("    file.Close\n");
+            printf("End If\n");
+            printf("Set http = Nothing\n");
+        }
+        cmd = "wscript \"" + vbsFile + "\"";
     } else {
         sprintf(cmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
     }
