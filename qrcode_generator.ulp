@@ -217,14 +217,19 @@ void loadLocalizedTexts() {
         // Create a temporary VBS script
         string vbsFile = filedir(argv[0]) + "temp_localization.vbs";
         output(vbsFile, "wD") {
-            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
+            printf("Option Explicit\n");
+            printf("Dim http, stream, fso, file\n");
+            printf("Set http = CreateObject(\"MSXML2.XMLHTTP\")\n");  // Using MSXML2.XMLHTTP instead of Microsoft.XMLHTTP
             printf("http.open \"GET\", \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\", False\n");
             printf("http.send\n");
             printf("If http.Status = 200 Then\n");
-            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
-            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", csvFile);
-            printf("    file.Write(http.responseText)\n");
-            printf("    file.Close\n");
+            printf("    Set stream = CreateObject(\"ADODB.Stream\")\n");
+            printf("    stream.Open\n");
+            printf("    stream.Type = 2  'Text\n");
+            printf("    stream.Charset = \"UTF-8\"\n");
+            printf("    stream.WriteText http.responseText\n");
+            printf("    stream.SaveToFile \"%s\", 2\n", csvFile);
+            printf("    stream.Close\n");
             printf("End If\n");
             printf("Set http = Nothing\n");
         }
