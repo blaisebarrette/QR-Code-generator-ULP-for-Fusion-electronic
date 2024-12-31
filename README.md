@@ -2,7 +2,7 @@
 
 A User Language Program (ULP) for generating QR codes directly on PCBs and schematics in Electronics Design, as well as footprint and symbols in the Electronics Library, in Autodesk Fusion Electronics / Eagle.
 
-![Interface preview](<https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/Interface_preview.jpg>)
+![Interface preview](https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/blob/main/Media/Interface_preview.jpg)
 
 ## Features
 
