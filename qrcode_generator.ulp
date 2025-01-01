@@ -15,7 +15,7 @@
        
        "fr: <b>Générateur de QR Code pour Fusion Electronics</b>\n"
        "<p>"
-       "Générez des QR codes directement dans les contextes PCB, Schéma, Symbole et Empreinte avec des tailles personnalisables.<br>"
+       "Générez des QR codes directement dans les contextes PCB, Schéma, Symbole et Encombrement avec des tailles personnalisables.<br>"
        "Le QR code sera automatiquement placé dans le quadrant supérieur gauche à partir de l'origine.</p>"
        "<p><b>Utilisation :</b><br>"
        "1. Exécutez l'ULP et entrez votre URL<br>"
