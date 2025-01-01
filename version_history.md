@@ -8,6 +8,7 @@
     - Portuguese
     - Chinese (Simplified)
 - #usage updated to support all languages
+- Added help dialog
 
 ## Version 1.1.0 (December 31 2024)
 ### New Features

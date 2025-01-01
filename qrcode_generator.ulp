@@ -2,7 +2,7 @@
 // This ULP generates QR codes directly on PCB layers
 // Version 1.1.1
 
-#usage "en: <b>QR Code Generator for Fusion Electronics <small>V1.1.1</small></b>\n"
+#usage "en: <b>QR Code Generator for Fusion Electronics</b>\n"
        "<p>"
        "Generate QR codes directly in PCB, Schematic, Symbol, and Footprint contexts with customizable sizes.<br>"
        "The QR code will be automatically placed in the upper-left quadrant from the origin.</p>"
@@ -13,7 +13,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Author: <b>Blaise Barrette</b></author>",
        
-       "fr: <b>Générateur de QR Code pour Fusion Electronics <small>V1.1.1</small></b>\n"
+       "fr: <b>Générateur de QR Code pour Fusion Electronics</b>\n"
        "<p>"
        "Générez des QR codes directement dans les contextes PCB, Schéma, Symbole et Empreinte avec des tailles personnalisables.<br>"
        "Le QR code sera automatiquement placé dans le quadrant supérieur gauche à partir de l'origine.</p>"
@@ -24,7 +24,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Auteur : <b>Blaise Barrette</b></author>",
        
-       "de: <b>QR-Code-Generator für Fusion Electronics <small>V1.1.1</small></b>\n"
+       "de: <b>QR-Code-Generator für Fusion Electronics</b>\n"
        "<p>"
        "Generieren Sie QR-Codes direkt in PCB-, Schaltplan-, Symbol- und Footprint-Kontexten mit anpassbaren Größen.<br>"
        "Der QR-Code wird automatisch im oberen linken Quadranten vom Ursprung platziert.</p>"
@@ -35,7 +35,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
        
-       "es: <b>Generador de códigos QR para Fusion Electronics <small>V1.1.1</small></b>\n"
+       "es: <b>Generador de códigos QR para Fusion Electronics</b>\n"
        "<p>"
        "Genere códigos QR directamente en contextos de PCB, Esquemático, Símbolo y Huella con tamaños personalizables.<br>"
        "El código QR se colocará automáticamente en el cuadrante superior izquierdo desde el origen.</p>"
@@ -46,7 +46,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
        
-       "it: <b>Generatore di codici QR per Fusion Electronics <small>V1.1.1</small></b>\n"
+       "it: <b>Generatore di codici QR per Fusion Electronics</b>\n"
        "<p>"
        "Genera codici QR direttamente nei contesti PCB, Schema, Simbolo e Impronta con dimensioni personalizzabili.<br>"
        "Il codice QR verrà posizionato automaticamente nel quadrante superiore sinistro dall'origine.</p>"
@@ -57,7 +57,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autore: <b>Blaise Barrette</b></author>",
        
-       "ja: <b>QRコードジェネレーター for Fusion Electronics <small>V1.1.1</small></b>\n"
+       "ja: <b>QRコードジェネレーター for Fusion Electronics</b>\n"
        "<p>"
        "PCB、回路図、シンボル、フットプリントのコンテキストで、カスタマイズ可能なサイズのQRコードを直接生成します。<br>"
        "QRコードは原点から左上の象限に自動的に配置されます。</p>"
@@ -68,7 +68,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>作者: <b>Blaise Barrette</b></author>",
        
-       "ko: <b>QR 코드 생성기 for Fusion Electronics <small>V1.1.1</small></b>\n"
+       "ko: <b>QR 코드 생성기 for Fusion Electronics</b>\n"
        "<p>"
        "PCB, 회로도, 심볼, 풋프린트 컨텍스트에서 사용자 지정 크기로 QR 코드를 직접 생성합니다.<br>"
        "QR 코드는 원점에서 좌측 상단 사분면에 자동으로 배치됩니다.</p>"
@@ -79,7 +79,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>작성자: <b>Blaise Barrette</b></author>",
        
-       "pl: <b>Generator kodów QR dla Fusion Electronics <small>V1.1.1</small></b>\n"
+       "pl: <b>Generator kodów QR dla Fusion Electronics</b>\n"
        "<p>"
        "Generuj kody QR bezpośrednio w kontekstach PCB, Schematu, Symbolu i Footprintu z dostosowywanymi rozmiarami.<br>"
        "Kod QR zostanie automatycznie umieszczony w lewym górnym kwadrancie od początku układu.</p>"
@@ -90,7 +90,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
        
-       "pt: <b>Gerador de código QR para Fusion Electronics <small>V1.1.1</small></b>\n"
+       "pt: <b>Gerador de código QR para Fusion Electronics</b>\n"
        "<p>"
        "Gere códigos QR diretamente nos contextos de PCB, Esquemático, Símbolo e Footprint com tamanhos personalizáveis.<br>"
        "O código QR será automaticamente colocado no quadrante superior esquerdo a partir da origem.</p>"
@@ -101,7 +101,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
        
-       "zh: <b>二维码生成器 for Fusion Electronics <small>V1.1.1</small></b>\n"
+       "zh: <b>二维码生成器 for Fusion Electronics</b>\n"
        "<p>"
        "在PCB、原理图、符号和封装环境中直接生成可自定义大小的二维码。<br>"
        "二维码将自动放置在原点的左上象限。</p>"
@@ -112,7 +112,7 @@
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>作者: <b>Blaise Barrette</b></author>",
        
-       "tr: <b>QR Kod Üreteci for Fusion Electronics <small>V1.1.1</small></b>\n"
+       "tr: <b>QR Kod Üreteci for Fusion Electronics</b>\n"
        "<p>"
        "PCB, Şematik, Sembol ve Footprint bağlamlarında özelleştirilebilir boyutlarla doğrudan QR kodları oluşturun.<br>"
        "QR kodu otomatik olarak başlangıç noktasından sol üst kadrana yerleştirilecektir.</p>"
@@ -375,6 +375,20 @@ string getContextName() {
     }
 }
 
+// Function to show help dialog
+void showHelpDialog() {
+    dlgDialog("Help") {
+        dlgVBoxLayout {
+            dlgTextView(usage);
+            dlgHBoxLayout {
+                dlgStretch(1);
+                dlgPushButton(getText("BUTTON_OK")) dlgAccept();
+                dlgStretch(1);
+            }
+        }
+    };
+}
+
 void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
@@ -484,13 +498,16 @@ void main(void) {
                     string versionText;
                     if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
                         // Older version detected
-                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font> <font color='#CC0000' size='-1'>(<a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest'>v%s available</a>)</font>", VERSION, LATEST_VERSION);
+                        sprintf(versionText, "v%s (%s available)", VERSION, LATEST_VERSION);
                     } else {
                         // Version is up to date
-                        sprintf(versionText, "<font color='gray' size='-1'>v%s</font>", VERSION);
+                        sprintf(versionText, "v%s", VERSION);
                     }
                     dlgLabel(versionText);
                     dlgStretch(1);
+                    dlgPushButton("?") {
+                        showHelpDialog();
+                    }
                 }
             }
         }
