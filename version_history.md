@@ -1,5 +1,15 @@
 # Version History
 
+## Version 1.1.1 (January 1 2025)
+### New Features
+- New language support
+    - Turkish
+    - Polish
+    - Portuguese
+    - Chinese (Simplified)
+- #usage updated to support all languages
+- Added help dialog
+
 ## Version 1.1.0 (December 31 2024)
 ### New Features
 - There is now only one version of ULP for both Windows and MacOS
