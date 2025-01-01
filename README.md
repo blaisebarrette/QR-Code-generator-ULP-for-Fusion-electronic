@@ -34,7 +34,10 @@ A User Language Program (ULP) for generating QR codes directly on PCBs and schem
   - Italian
   - Japanese
   - Korean
-  - Chinese
+  - Polish
+  - Portuguese
+  - Chinese (Simplified)
+  - Turkish
 - No local installation required
 
 ## System Requirements
