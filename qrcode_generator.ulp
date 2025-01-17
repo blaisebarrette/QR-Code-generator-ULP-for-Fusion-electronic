@@ -1,6 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.1.1
+// Version 1.1.2
 
 #usage "en: <b>QR Code Generator for Fusion Electronics</b>\n"
        "<p>"
@@ -8,7 +8,7 @@
        "The QR code will be automatically placed in the upper-left quadrant from the origin.</p>"
        "<p><b>Usage:</b><br>"
        "1. Run the ULP and enter your URL<br>"
-       "2. Select the size (from 250 mils to 5000 mils, where 1000 mils = 1 inch)<br>"
+       "2. Select the size and unit (mils, inches, or mm)<br>"
        "3. Choose the destination layer</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Author: <b>Blaise Barrette</b></author>",
@@ -19,7 +19,7 @@
        "Le QR code sera automatiquement placé dans le quadrant supérieur gauche à partir de l'origine.</p>"
        "<p><b>Utilisation :</b><br>"
        "1. Exécutez l'ULP et entrez votre URL<br>"
-       "2. Sélectionnez la taille (de 250 à 5000 mils, où 1000 mils = 1 pouce)<br>"
+       "2. Sélectionnez la taille et l'unité (mils, pouces ou mm)<br>"
        "3. Choisissez la couche de destination</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Auteur : <b>Blaise Barrette</b></author>",
@@ -30,7 +30,7 @@
        "Der QR-Code wird automatisch im oberen linken Quadranten vom Ursprung platziert.</p>"
        "<p><b>Verwendung:</b><br>"
        "1. Führen Sie das ULP aus und geben Sie Ihre URL ein<br>"
-       "2. Wählen Sie die Größe (von 250 bis 5000 mils, wobei 1000 mils = 1 Zoll)<br>"
+       "2. Wählen Sie die Größe und Einheit (mils, Zoll oder mm)<br>"
        "3. Wählen Sie die Zielebene</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
@@ -41,7 +41,7 @@
        "El código QR se colocará automáticamente en el cuadrante superior izquierdo desde el origen.</p>"
        "<p><b>Uso:</b><br>"
        "1. Ejecute el ULP e ingrese su URL<br>"
-       "2. Seleccione el tamaño (de 250 a 5000 mils, donde 1000 mils = 1 pulgada)<br>"
+       "2. Seleccione el tamaño y la unidad (mils, pulgadas o mm)<br>"
        "3. Elija la capa de destino</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
@@ -52,7 +52,7 @@
        "Il codice QR verrà posizionato automaticamente nel quadrante superiore sinistro dall'origine.</p>"
        "<p><b>Utilizzo:</b><br>"
        "1. Esegui l'ULP e inserisci il tuo URL<br>"
-       "2. Seleziona la dimensione (da 250 a 5000 mils, dove 1000 mils = 1 pollice)<br>"
+       "2. Seleziona la dimensione e l'unità (mils, pollici o mm)<br>"
        "3. Scegli il layer di destinazione</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autore: <b>Blaise Barrette</b></author>",
@@ -63,7 +63,7 @@
        "QRコードは原点から左上の象限に自動的に配置されます。</p>"
        "<p><b>使用方法：</b><br>"
        "1. ULPを実行してURLを入力<br>"
-       "2. サイズを選択（250～5000 mils、1000 mils = 1インチ）<br>"
+       "2. サイズと単位を選択（mils、インチ、mm）<br>"
        "3. 配置するレイヤーを選択</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>作者: <b>Blaise Barrette</b></author>",
@@ -74,7 +74,7 @@
        "QR 코드는 원점에서 좌측 상단 사분면에 자동으로 배치됩니다.</p>"
        "<p><b>사용법:</b><br>"
        "1. ULP를 실행하고 URL 입력<br>"
-       "2. 크기 선택 (250~5000 mils, 1000 mils = 1인치)<br>"
+       "2. 크기와 단위 선택 (mils, 인치, mm)<br>"
        "3. 대상 레이어 선택</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>작성자: <b>Blaise Barrette</b></author>",
@@ -85,7 +85,7 @@
        "Kod QR zostanie automatycznie umieszczony w lewym górnym kwadrancie od początku układu.</p>"
        "<p><b>Użycie:</b><br>"
        "1. Uruchom ULP i wprowadź swój URL<br>"
-       "2. Wybierz rozmiar (od 250 do 5000 mils, gdzie 1000 mils = 1 cal)<br>"
+       "2. Wybierz rozmiar i jednostkę (mils, cale lub mm)<br>"
        "3. Wybierz warstwę docelową</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
@@ -96,7 +96,7 @@
        "O código QR será automaticamente colocado no quadrante superior esquerdo a partir da origem.</p>"
        "<p><b>Uso:</b><br>"
        "1. Execute o ULP e insira sua URL<br>"
-       "2. Selecione o tamanho (de 250 a 5000 mils, onde 1000 mils = 1 polegada)<br>"
+       "2. Selecione o tamanho e a unidade (mils, polegadas ou mm)<br>"
        "3. Escolha a camada de destino</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Autor: <b>Blaise Barrette</b></author>",
@@ -107,7 +107,7 @@
        "二维码将自动放置在原点的左上象限。</p>"
        "<p><b>使用方法：</b><br>"
        "1. 运行ULP并输入URL<br>"
-       "2. 选择大小（250至5000 mils，其中1000 mils = 1英寸）<br>"
+       "2. 选择大小和单位（mils、英寸或毫米）<br>"
        "3. 选择目标层</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>作者: <b>Blaise Barrette</b></author>",
@@ -118,7 +118,7 @@
        "QR kodu otomatik olarak başlangıç noktasından sol üst kadrana yerleştirilecektir.</p>"
        "<p><b>Kullanım:</b><br>"
        "1. ULP'yi çalıştırın ve URL'nizi girin<br>"
-       "2. Boyutu seçin (250 ile 5000 mil arası, 1000 mil = 1 inç)<br>"
+       "2. Boyutu ve birimi seçin (mils, inç veya mm)<br>"
        "3. Hedef katmanı seçin</p>"
        "<p>GitHub: <a href='https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics'>QRCode-ULP-for-Fusion-electronics</a></p>"
        "<author>Yazar: <b>Blaise Barrette</b></author>"
@@ -126,10 +126,11 @@
 #require 4.11  // 4.11 is the minimum Eagle version required for this ULP
 
 // Global variables
-string VERSION = "1.1.1";
+string VERSION = "1.1.2";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
+string debugGridInfo = "";  // Déplacer ici et supprimer la déclaration plus bas
 
 // Context constants and variable
 enum {
@@ -144,6 +145,119 @@ int currentContext;
 string TextKeys[];    // Store keys
 string TextValues[];  // Store corresponding values
 int TextCount = 0;    // Number of texts loaded
+
+// After the global variables section, add these constants and variables
+enum {
+    UNIT_MILS,
+    UNIT_INCHES,
+    UNIT_MM
+};
+
+int currentUnit = UNIT_MILS;  // Default to mils
+string UnitNames[] = {"mils", "inches", "mm"};
+
+// Function to get grid unit text
+string getGridUnitText(int displayUnit) {
+    switch(displayUnit) {
+        case 0: return "MICRON";  // GRID_UNIT_MIC
+        case 1: return "MM";      // GRID_UNIT_MM
+        case 2: return "MIL";     // GRID_UNIT_MIL
+        case 3: return "INCH";    // GRID_UNIT_INCH
+        default: return "UNKNOWN";
+    }
+}
+
+// Function to get default grid unit and scale
+int getDefaultGridUnit() {
+    if (board) {
+        board(B) {
+            // Get both display unit and actual grid unit
+            int displayUnit = B.grid.unit;
+            real gridDist = B.grid.distance;
+            
+            // Store grid info for debug
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            // Map EAGLE grid units to our units
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    } else if (library) {
+        library(L) {
+            int displayUnit = L.grid.unit;
+            real gridDist = L.grid.distance;
+            
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    } else if (schematic) {
+        schematic(S) {
+            int displayUnit = S.grid.unit;
+            real gridDist = S.grid.distance;
+            
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    }
+    return UNIT_MILS;
+}
+
+// Function to convert size to mils based on selected unit
+int convertToMils(real size, int fromUnit) {
+    switch(fromUnit) {
+        case UNIT_MM:
+            return round(size * 39.3701);  // mm to mils (1 mm = 39.3701 mils)
+        case UNIT_INCHES:
+            return round(size * 1000.0);   // inches to mils (1 inch = 1000 mils)
+        case UNIT_MILS:
+            return round(size);
+    }
+    return round(size);
+}
+
+// Function to convert size from mils to selected unit
+real convertFromMils(int size, int toUnit) {
+    switch(toUnit) {
+        case UNIT_MM:
+            return real(size) / 39.3701;   // mils to mm
+        case UNIT_INCHES:
+            return real(size) / 1000.0;    // mils to inches
+        case UNIT_MILS:
+            return real(size);
+    }
+    return real(size);
+}
 
 // Function to detect Windows OS
 int IsWindows() {
@@ -404,7 +518,9 @@ void main(void) {
     
     // Initialize variables
     string Url = "";
-    int Size = 500;
+    int Size = 500;  // Size in mils
+    currentUnit = getDefaultGridUnit();  // Set initial unit based on grid preferences
+    real displaySize = convertFromMils(Size, currentUnit);  // Convert for display
     
     // Layer selection (simplified to most commonly used layers)
     string LayerNames[];
@@ -480,7 +596,15 @@ void main(void) {
                     dlgStringEdit(Url);
                     dlgSpacing(10);
                     dlgLabel(getText("SIZE_LABEL"));
-                    dlgSpinBox(Size, 250, 5000);
+                    dlgHBoxLayout {
+                        dlgRealEdit(displaySize, 0.25, 5000.0);
+                        dlgComboBox(UnitNames, currentUnit) {
+                            // Convert displayed size when unit changes
+                            int tempMils = convertToMils(displaySize, currentUnit);  // Convert current size to mils
+                            displaySize = convertFromMils(tempMils, currentUnit);  // Convert back to new unit
+                            dlgRedisplay();
+                        }
+                    }
                     dlgSpacing(10);
                     dlgLabel(getText("LAYER_LABEL"));
                     dlgComboBox(LayerNames, SelectedLayer);
@@ -514,6 +638,19 @@ void main(void) {
     } || Url == "") {
         dlgMessageBox(getText("ERROR_NO_URL"));
         exit(0);
+    }
+    
+    // Convert final size to mils for QR code generation
+    Size = convertToMils(displaySize, currentUnit);
+    
+    // Debug dialog
+    int displayUnit = 0;  // Default to MICRON
+    if (board) {
+        board(B) displayUnit = B.grid.unit;
+    } else if (library) {
+        library(L) displayUnit = L.grid.unit;
+    } else if (schematic) {
+        schematic(S) displayUnit = S.grid.unit;
     }
     
     // Prepare file paths
@@ -597,39 +734,57 @@ void main(void) {
         // Use the requested size as the base and no longer adjust it
         int targetSize = Size;
         
-        // Calculate the module size as a floating-point value (scale factor)
+        // Calculate the module size based on grid unit
         real moduleScale;
-        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-            moduleScale = real(targetSize) / real(qrSize); // For PCB: 1 unit = 1 mil
+        real startXoffset = 250.0;  // Offset constant in mils
+        real startX = 0;
+        real startY = 0;
+        
+        switch(displayUnit) {  // displayUnit contient l'unité de la grille
+            case 0:  // GRID_UNIT_MIC
+                // Convert from mils to microns (1 mil = 25.4 microns)
+                moduleScale = (real(targetSize) * 25.4) / real(qrSize);
+                startX = startXoffset * 25.4;  // Convert offset to microns
+                break;
+                
+            case 1:  // GRID_UNIT_MM
+                // Convert from mils to mm (1 mil = 0.0254 mm)
+                moduleScale = (real(targetSize) * 0.0254) / real(qrSize);
+                startX = startXoffset * 0.0254;  // Convert offset to mm
+                break;
+                
+            case 2:  // GRID_UNIT_MIL
+                // Keep in mils (1:1)
+                moduleScale = real(targetSize) / real(qrSize);
+                startX = startXoffset;  // Keep in mils
+                break;
+                
+            case 3:  // GRID_UNIT_INCH
+                // Convert from mils to inches (1000 mils = 1 inch)
+                moduleScale = (real(targetSize) / 1000.0) / real(qrSize);
+                startX = startXoffset / 1000.0;  // Convert offset to inches
+                break;
+                
+            default:
+                // Fallback to mils if unknown unit
+                moduleScale = real(targetSize) / real(qrSize);
+                startX = startXoffset;
+        }
+        // Creating the rectangles of the QR Code
+        int isBottomLayer = (currentContext == CONTEXT_BOARD || currentContext == CONTEXT_PACKAGE) &&
+                            (LayerNumbers[SelectedLayer] == 16 ||  // Bottom layer
+                             LayerNumbers[SelectedLayer] == 22 ||  // Bottom silkscreen
+                             LayerNumbers[SelectedLayer] == 52);   // Bottom documentation
+        // Adjust startX based on layer and mirror settings
+        if(!isBottomLayer) {
+            startX = -(moduleScale * qrSize + startX);  // Place QR code and offset to the left
         } else {
-            moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // For schematic: convert mils to inches
+            startX = startX;  // Keep offset positive for bottom layer
         }
         
         printf("# QR Code Generator Script\n");
         printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
         printf("SET WIRE_BEND 2;\n");
-        
-        // Creating the rectangles of the QR Code
-        int isBottomLayer = (currentContext == CONTEXT_BOARD && 
-                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52)) ||
-                           (currentContext == CONTEXT_PACKAGE && 
-                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52));
-        
-        // Calculate the starting point
-        real startX = 0;
-        real startY = 0;
-        
-        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-            if(!isBottomLayer) {
-                startX = -(targetSize + 250);
-            } else {
-                startX = 250;
-            }
-        } else {
-            // For schematics, place at -0.25 inch from origin
-            // Convert targetSize from mils to inches and add 0.25 inch
-            startX = -(targetSize/1000.0 + 0.5);
-        }
         
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];

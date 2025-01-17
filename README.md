@@ -72,8 +72,8 @@ That's it! The ULP is now available from Fusion Electronics!
 6. You can also type `RUN qrcode_generator` in the command line and press Enter.
 7. In the dialog box:
    - Input the URL for the QR code.
-   - Specify the size in mils (1000 mils = 1 inch).
-   - Choose the destination layer.
+   - Select size and unit (inches, mils, or mm).
+   - Choose target layer.
 
 The QR code will be placed automatically in the upper-left quadrant of the origin.
 

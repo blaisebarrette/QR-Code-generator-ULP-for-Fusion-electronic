@@ -1,5 +1,15 @@
 # Version History
 
+## Version 1.1.2 (January 17 2025)
+### New Feature
+- Added unit selection in the dialog box
+    - Inches
+    - Mils
+    - mm
+
+### Improvements
+- Fixed QR code size accuracy issue when grid unit is set to mm
+
 ## Version 1.1.1 (January 1 2025)
 ### New Features
 - New language support
