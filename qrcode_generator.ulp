@@ -659,18 +659,27 @@ void main(void) {
         "Grid Unit: %s\n"
         "Selected Unit: %s\n"
         "Input Size: %.3f %s\n"
-        "Test Conversions:\n"
+        "\nConversion Process:\n"
+        "1. Input: %.3f %s\n"
+        "2. Converting to mils...\n"
+        "3. Result: %d mils\n"
+        "\nTest Conversions:\n"
         "- 1000 mils = %.3f mm\n"
         "- 25.4 mm = %d mils\n"
         "- 1 inch = %d mils\n"
-        "Final Size (mils): %d\n"
+        "\nFinal Values:\n"
+        "- Display Size: %.3f\n"
+        "- Final Size (mils): %d\n"
         "Context: %s",
-        getGridUnitText(displayUnit),  // Grid unit
-        UnitNames[currentUnit],        // Selected unit in dialog
+        getGridUnitText(displayUnit),      // Grid unit
+        UnitNames[currentUnit],            // Selected unit in dialog
         displaySize, UnitNames[currentUnit],
+        displaySize, UnitNames[currentUnit],
+        convertToMils(displaySize, currentUnit),
         convertFromMils(1000, UNIT_MM),
         convertToMils(25.4, UNIT_MM),
         convertToMils(1.0, UNIT_INCHES),
+        displaySize,
         Size,
         getContextName()
     );
@@ -758,39 +767,57 @@ void main(void) {
         // Use the requested size as the base and no longer adjust it
         int targetSize = Size;
         
-        // Calculate the module size as a floating-point value (scale factor)
+        // Calculate the module size based on grid unit
         real moduleScale;
-        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-            moduleScale = real(targetSize) / real(qrSize); // For PCB: 1 unit = 1 mil
+        real startXoffset = 250.0;  // Offset constant in mils
+        real startX = 0;
+        real startY = 0;
+        
+        switch(displayUnit) {  // displayUnit contient l'unité de la grille
+            case 0:  // GRID_UNIT_MIC
+                // Convert from mils to microns (1 mil = 25.4 microns)
+                moduleScale = (real(targetSize) * 25.4) / real(qrSize);
+                startX = startXoffset * 25.4;  // Convert offset to microns
+                break;
+                
+            case 1:  // GRID_UNIT_MM
+                // Convert from mils to mm (1 mil = 0.0254 mm)
+                moduleScale = (real(targetSize) * 0.0254) / real(qrSize);
+                startX = startXoffset * 0.0254;  // Convert offset to mm
+                break;
+                
+            case 2:  // GRID_UNIT_MIL
+                // Keep in mils (1:1)
+                moduleScale = real(targetSize) / real(qrSize);
+                startX = startXoffset;  // Keep in mils
+                break;
+                
+            case 3:  // GRID_UNIT_INCH
+                // Convert from mils to inches (1000 mils = 1 inch)
+                moduleScale = (real(targetSize) / 1000.0) / real(qrSize);
+                startX = startXoffset / 1000.0;  // Convert offset to inches
+                break;
+                
+            default:
+                // Fallback to mils if unknown unit
+                moduleScale = real(targetSize) / real(qrSize);
+                startX = startXoffset;
+        }
+        // Creating the rectangles of the QR Code
+        int isBottomLayer = (currentContext == CONTEXT_BOARD || currentContext == CONTEXT_PACKAGE) &&
+                            (LayerNumbers[SelectedLayer] == 16 ||  // Bottom layer
+                             LayerNumbers[SelectedLayer] == 22 ||  // Bottom silkscreen
+                             LayerNumbers[SelectedLayer] == 52);   // Bottom documentation
+        // Adjust startX based on layer and mirror settings
+        if(!isBottomLayer) {
+            startX = -(moduleScale * qrSize + startX);  // Place QR code and offset to the left
         } else {
-            moduleScale = (real(targetSize) / real(qrSize)) / 1000.0; // For schematic: convert mils to inches
+            startX = startX;  // Keep offset positive for bottom layer
         }
         
         printf("# QR Code Generator Script\n");
         printf("CHANGE LAYER %d;\n", LayerNumbers[SelectedLayer]);
         printf("SET WIRE_BEND 2;\n");
-        
-        // Creating the rectangles of the QR Code
-        int isBottomLayer = (currentContext == CONTEXT_BOARD && 
-                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52)) ||
-                           (currentContext == CONTEXT_PACKAGE && 
-                           (LayerNumbers[SelectedLayer] == 22 || LayerNumbers[SelectedLayer] == 52));
-        
-        // Calculate the starting point
-        real startX = 0;
-        real startY = 0;
-        
-        if ((currentContext == CONTEXT_BOARD) || (currentContext == CONTEXT_PACKAGE)) {
-            if(!isBottomLayer) {
-                startX = -(targetSize + 250);
-            } else {
-                startX = 250;
-            }
-        } else {
-            // For schematics, place at -0.25 inch from origin
-            // Convert targetSize from mils to inches and add 0.25 inch
-            startX = -(targetSize/1000.0 + 0.5);
-        }
         
         for (int row = 0; row < nLines; row++) {
             string line = lines[row];
