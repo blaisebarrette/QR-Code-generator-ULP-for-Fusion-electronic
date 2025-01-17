@@ -1,4 +1,5 @@
 version,release_date,release_notes,api_url,supported
+1.1.2,2025-1-17,Stable release,https://blaisebarrette.pythonanywhere.com/generate-qr,1
 1.1.1,2025-1-1,Stable release,https://blaisebarrette.pythonanywhere.com/generate-qr,1
 1.1.0,2024-12-30,Stable release,https://blaisebarrette.pythonanywhere.com/generate-qr,1
 1.0.4,2024-12-29,Stable release,https://blaisebarrette.pythonanywhere.com/generate-qr,1

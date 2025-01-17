@@ -1,6 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.1.1
+// Version 1.1.2
 
 #usage "en: <b>QR Code Generator for Fusion Electronics</b>\n"
        "<p>"
@@ -126,7 +126,7 @@
 #require 4.11  // 4.11 is the minimum Eagle version required for this ULP
 
 // Global variables
-string VERSION = "1.1.1";
+string VERSION = "1.1.2";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -652,39 +652,6 @@ void main(void) {
     } else if (schematic) {
         schematic(S) displayUnit = S.grid.unit;
     }
-
-    string debugInfo;
-    sprintf(debugInfo, 
-        "Debug Information:\n\n"
-        "Grid Unit: %s\n"
-        "Selected Unit: %s\n"
-        "Input Size: %.3f %s\n"
-        "\nConversion Process:\n"
-        "1. Input: %.3f %s\n"
-        "2. Converting to mils...\n"
-        "3. Result: %d mils\n"
-        "\nTest Conversions:\n"
-        "- 1000 mils = %.3f mm\n"
-        "- 25.4 mm = %d mils\n"
-        "- 1 inch = %d mils\n"
-        "\nFinal Values:\n"
-        "- Display Size: %.3f\n"
-        "- Final Size (mils): %d\n"
-        "Context: %s",
-        getGridUnitText(displayUnit),      // Grid unit
-        UnitNames[currentUnit],            // Selected unit in dialog
-        displaySize, UnitNames[currentUnit],
-        displaySize, UnitNames[currentUnit],
-        convertToMils(displaySize, currentUnit),
-        convertFromMils(1000, UNIT_MM),
-        convertToMils(25.4, UNIT_MM),
-        convertToMils(1.0, UNIT_INCHES),
-        displaySize,
-        Size,
-        getContextName()
-    );
-
-    dlgMessageBox(debugInfo, "OK");
     
     // Prepare file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
