@@ -130,6 +130,7 @@ string VERSION = "1.1.1";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
+string debugGridInfo = "";  // Déplacer ici et supprimer la déclaration plus bas
 
 // Context constants and variable
 enum {
@@ -144,6 +145,119 @@ int currentContext;
 string TextKeys[];    // Store keys
 string TextValues[];  // Store corresponding values
 int TextCount = 0;    // Number of texts loaded
+
+// After the global variables section, add these constants and variables
+enum {
+    UNIT_MILS,
+    UNIT_INCHES,
+    UNIT_MM
+};
+
+int currentUnit = UNIT_MILS;  // Default to mils
+string UnitNames[] = {"mils", "inches", "mm"};
+
+// Function to get grid unit text
+string getGridUnitText(int displayUnit) {
+    switch(displayUnit) {
+        case 0: return "MICRON";  // GRID_UNIT_MIC
+        case 1: return "MM";      // GRID_UNIT_MM
+        case 2: return "MIL";     // GRID_UNIT_MIL
+        case 3: return "INCH";    // GRID_UNIT_INCH
+        default: return "UNKNOWN";
+    }
+}
+
+// Function to get default grid unit and scale
+int getDefaultGridUnit() {
+    if (board) {
+        board(B) {
+            // Get both display unit and actual grid unit
+            int displayUnit = B.grid.unit;
+            real gridDist = B.grid.distance;
+            
+            // Store grid info for debug
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            // Map EAGLE grid units to our units
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    } else if (library) {
+        library(L) {
+            int displayUnit = L.grid.unit;
+            real gridDist = L.grid.distance;
+            
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    } else if (schematic) {
+        schematic(S) {
+            int displayUnit = S.grid.unit;
+            real gridDist = S.grid.distance;
+            
+            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
+                    getGridUnitText(displayUnit), gridDist);
+            
+            switch(displayUnit) {
+                case 0:  // GRID_UNIT_MIC
+                    return UNIT_MM;
+                case 1:  // GRID_UNIT_MM
+                    return UNIT_MM;
+                case 2:  // GRID_UNIT_MIL
+                    return UNIT_MILS;
+                case 3:  // GRID_UNIT_INCH
+                    return UNIT_INCHES;
+            }
+        }
+    }
+    return UNIT_MILS;
+}
+
+// Function to convert size to mils based on selected unit
+int convertToMils(real size, int fromUnit) {
+    switch(fromUnit) {
+        case UNIT_MM:
+            return round(size * 39.3701);  // mm to mils (1 mm = 39.3701 mils)
+        case UNIT_INCHES:
+            return round(size * 1000.0);   // inches to mils (1 inch = 1000 mils)
+        case UNIT_MILS:
+            return round(size);
+    }
+    return round(size);
+}
+
+// Function to convert size from mils to selected unit
+real convertFromMils(int size, int toUnit) {
+    switch(toUnit) {
+        case UNIT_MM:
+            return real(size) / 39.3701;   // mils to mm
+        case UNIT_INCHES:
+            return real(size) / 1000.0;    // mils to inches
+        case UNIT_MILS:
+            return real(size);
+    }
+    return real(size);
+}
 
 // Function to detect Windows OS
 int IsWindows() {
@@ -404,7 +518,9 @@ void main(void) {
     
     // Initialize variables
     string Url = "";
-    int Size = 500;
+    int Size = 500;  // Size in mils
+    currentUnit = getDefaultGridUnit();  // Set initial unit based on grid preferences
+    real displaySize = convertFromMils(Size, currentUnit);  // Convert for display
     
     // Layer selection (simplified to most commonly used layers)
     string LayerNames[];
@@ -480,7 +596,15 @@ void main(void) {
                     dlgStringEdit(Url);
                     dlgSpacing(10);
                     dlgLabel(getText("SIZE_LABEL"));
-                    dlgSpinBox(Size, 250, 5000);
+                    dlgHBoxLayout {
+                        dlgRealEdit(displaySize, 0.25, 5000.0);
+                        dlgComboBox(UnitNames, currentUnit) {
+                            // Convert displayed size when unit changes
+                            int tempMils = convertToMils(displaySize, currentUnit);  // Convert current size to mils
+                            displaySize = convertFromMils(tempMils, currentUnit);  // Convert back to new unit
+                            dlgRedisplay();
+                        }
+                    }
                     dlgSpacing(10);
                     dlgLabel(getText("LAYER_LABEL"));
                     dlgComboBox(LayerNames, SelectedLayer);
@@ -515,6 +639,43 @@ void main(void) {
         dlgMessageBox(getText("ERROR_NO_URL"));
         exit(0);
     }
+    
+    // Convert final size to mils for QR code generation
+    Size = convertToMils(displaySize, currentUnit);
+    
+    // Debug dialog
+    int displayUnit = 0;  // Default to MICRON
+    if (board) {
+        board(B) displayUnit = B.grid.unit;
+    } else if (library) {
+        library(L) displayUnit = L.grid.unit;
+    } else if (schematic) {
+        schematic(S) displayUnit = S.grid.unit;
+    }
+
+    string debugInfo;
+    sprintf(debugInfo, 
+        "Debug Information:\n\n"
+        "Grid Unit: %s\n"
+        "Selected Unit: %s\n"
+        "Input Size: %.3f %s\n"
+        "Test Conversions:\n"
+        "- 1000 mils = %.3f mm\n"
+        "- 25.4 mm = %d mils\n"
+        "- 1 inch = %d mils\n"
+        "Final Size (mils): %d\n"
+        "Context: %s",
+        getGridUnitText(displayUnit),  // Grid unit
+        UnitNames[currentUnit],        // Selected unit in dialog
+        displaySize, UnitNames[currentUnit],
+        convertFromMils(1000, UNIT_MM),
+        convertToMils(25.4, UNIT_MM),
+        convertToMils(1.0, UNIT_INCHES),
+        Size,
+        getContextName()
+    );
+
+    dlgMessageBox(debugInfo, "OK");
     
     // Prepare file paths
     string tmpFile = filedir(argv[0]) + "qr_temp.txt";
