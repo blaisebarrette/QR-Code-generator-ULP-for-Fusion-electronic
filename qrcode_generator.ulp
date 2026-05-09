@@ -1,6 +1,6 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.1.2
+// Version 1.2.0 - native QR generation (no Python server required)
 
 #usage "en: <b>QR Code Generator for Fusion Electronics</b>\n"
        "<p>"
@@ -125,8 +125,881 @@
 
 #require 4.11  // 4.11 is the minimum Eagle version required for this ULP
 
+// =========================================================================
+// Native QR Code generation engine (inlined for single-file distribution)
+// -------------------------------------------------------------------------
+// This block replaces the previous Python-server dependency. It implements
+// QR Code generation entirely in ULP for versions V1..V10, ECC level L,
+// byte mode. The architecture is designed for future extension to V11..V40
+// and ECC levels M/Q/H without changing the public API.
+//
+// Public API:
+//   int qrGenerate(string data, int ecc, int mode);
+//     -> on success: number of "0/1" rows written into QR_OUTPUT_LINES[]
+//     -> on failure: -1 (see QR_LAST_ERROR for diagnostics)
+//
+// Sections (each was previously a separate include):
+//   1. Tables and constants    (was qr_tables.ulp)
+//   2. GF(256) + Reed-Solomon  (was qr_gf256.ulp)
+//   3. Data encoding pipeline  (was qr_encode.ulp)
+//   4. Matrix construction     (was qr_matrix.ulp)
+//   5. Public API              (was qr_core.ulp)
+//
+// All large working buffers are kept as globals because ULP user-defined
+// functions pass parameters by value (modifications inside a function do
+// not propagate to the caller).
+// =========================================================================
+
+// -------------------------------------------------------------------------
+// 1. Tables and constants
+// -------------------------------------------------------------------------
+
+// ECC level codes (placement-bit values are encoded in qrEccBits()).
+enum {
+    ECC_L = 0,
+    ECC_M = 1,
+    ECC_Q = 2,
+    ECC_H = 3
+};
+
+// Encoding mode codes.
+enum {
+    MODE_BYTE     = 0,
+    MODE_NUMERIC  = 1,
+    MODE_ALPHANUM = 2
+};
+
+// Highest version supported in this build.
+int QR_MAX_VERSION = 10;
+
+// EC codewords per block, level L, V1..V10
+int QR_ECP_L[]  = { 7, 10, 15, 20, 26, 18, 20, 24, 30, 18 };
+// Group 1: number of blocks, level L, V1..V10
+int QR_G1C_L[]  = { 1,  1,  1,  1,  1,  2,  2,  2,  2,  2 };
+// Group 1: data codewords per block, level L, V1..V10
+int QR_G1D_L[]  = {19, 34, 55, 80,108, 68, 78, 97,116, 68 };
+// Group 2: number of blocks, level L, V1..V10 (0 = no group 2)
+int QR_G2C_L[]  = { 0,  0,  0,  0,  0,  0,  0,  0,  0,  2 };
+// Group 2: data codewords per block, level L, V1..V10
+int QR_G2D_L[]  = { 0,  0,  0,  0,  0,  0,  0,  0,  0, 69 };
+
+// Alignment pattern center positions per version.
+// V1     : 0 patterns (none, only finder corners).
+// V2..V6 : 2 positions [first, last].
+// V7..V10: 3 positions [first, middle, last].
+int QR_ALIGN_COUNT[] = { 0, 2, 2, 2, 2, 2, 3, 3, 3, 3 };
+int QR_ALIGN_POS_FLAT[] = {
+    0, 0, 0,    // V1
+    6,18, 0,    // V2
+    6,22, 0,    // V3
+    6,26, 0,    // V4
+    6,30, 0,    // V5
+    6,34, 0,    // V6
+    6,22,38,    // V7
+    6,24,42,    // V8
+    6,26,46,    // V9
+    6,28,50     // V10
+};
+
+// BCH encoding constants.
+int QR_BCH_GEN_FORMAT  = 0x537;   // x^10+x^8+x^5+x^4+x^2+x+1
+int QR_BCH_MASK_FORMAT = 0x5412;  // XOR mask applied to format info
+int QR_BCH_GEN_VERSION = 0x1F25;  // x^12+x^11+x^10+x^9+x^8+x^5+x^2+1 (used for V7+)
+
+// GF(256) primitive polynomial: x^8+x^4+x^3+x^2+1 (QR Code standard)
+int QR_GF_PRIM = 0x11D;
+
+// Padding bytes for byte mode (alternating).
+int QR_PAD_BYTE_1 = 0xEC;
+int QR_PAD_BYTE_2 = 0x11;
+
+// Returns total data codewords for the given version and ECC level,
+// or -1 if not supported in this build.
+int qrDataCodewords(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    if (version < 1 || version > QR_MAX_VERSION) return -1;
+    int v = version - 1;
+    return QR_G1C_L[v] * QR_G1D_L[v] + QR_G2C_L[v] * QR_G2D_L[v];
+}
+
+// Returns EC codewords per block for given version and ECC level.
+int qrEcPerBlock(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    if (version < 1 || version > QR_MAX_VERSION) return -1;
+    return QR_ECP_L[version - 1];
+}
+
+// Block decomposition accessors.
+int qrG1Count(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    return QR_G1C_L[version - 1];
+}
+int qrG1DataPerBlock(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    return QR_G1D_L[version - 1];
+}
+int qrG2Count(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    return QR_G2C_L[version - 1];
+}
+int qrG2DataPerBlock(int version, int ecc) {
+    if (ecc != ECC_L) return -1;
+    return QR_G2D_L[version - 1];
+}
+int qrTotalBlocks(int version, int ecc) {
+    return qrG1Count(version, ecc) + qrG2Count(version, ecc);
+}
+
+// Total codewords (data + EC) used for module placement.
+int qrTotalCodewords(int version, int ecc) {
+    int data   = qrDataCodewords(version, ecc);
+    int blocks = qrTotalBlocks(version, ecc);
+    int ec     = qrEcPerBlock(version, ecc);
+    return data + blocks * ec;
+}
+
+// Matrix size for a version: N = 21 + 4*(V-1).
+int qrMatrixSize(int version) {
+    return 21 + 4 * (version - 1);
+}
+
+// Character count indicator length in bits, per mode and version.
+// Byte mode: 8 bits for V1..V9, 16 bits for V10..V40.
+int qrCharCountBits(int mode, int version) {
+    if (mode == MODE_BYTE) {
+        if (version <= 9) return 8;
+        return 16;
+    }
+    return -1;
+}
+
+// Mode indicator (4 bits).
+int qrModeIndicator(int mode) {
+    if (mode == MODE_BYTE)     return 0x4;
+    if (mode == MODE_NUMERIC)  return 0x1;
+    if (mode == MODE_ALPHANUM) return 0x2;
+    return -1;
+}
+
+// Number of alignment-pattern center positions for the given version.
+int qrAlignCount(int version) {
+    if (version < 1 || version > QR_MAX_VERSION) return 0;
+    return QR_ALIGN_COUNT[version - 1];
+}
+
+// Get an alignment-pattern center position by index (0..qrAlignCount-1).
+int qrAlignPos(int version, int index) {
+    if (version < 1 || version > QR_MAX_VERSION) return -1;
+    if (index < 0 || index >= QR_ALIGN_COUNT[version - 1]) return -1;
+    return QR_ALIGN_POS_FLAT[(version - 1) * 3 + index];
+}
+
+// 2-bit ECC code for format info.
+int qrEccBits(int ecc) {
+    if (ecc == ECC_L) return 0x1;  // 01
+    if (ecc == ECC_M) return 0x0;  // 00
+    if (ecc == ECC_Q) return 0x3;  // 11
+    if (ecc == ECC_H) return 0x2;  // 10
+    return -1;
+}
+
+// -------------------------------------------------------------------------
+// 2. GF(256) arithmetic and Reed-Solomon encoding
+// -------------------------------------------------------------------------
+
+// Galois field log/antilog tables (built once by qrGfInit()).
+// QR_GF_EXP is doubled (length 512) so that gfMul can avoid a modulo.
+int QR_GF_LOG[];
+int QR_GF_EXP[];
+int QR_GF_INITIALIZED = 0;
+
+// Reed-Solomon working buffers.
+int QR_RS_DIVISOR[];
+int QR_RS_DIVISOR_LEN = 0;
+int QR_RS_ECC[];
+
+// Data codewords buffer (populated by the encoding stage; consumed by the
+// Reed-Solomon encoder and the interleaver).
+int QR_CODEWORDS[];
+int QR_CODEWORDS_LEN = 0;
+
+// Build the log and antilog tables for GF(256) using QR_GF_PRIM.
+void qrGfInit() {
+    if (QR_GF_INITIALIZED) return;
+    int i;
+    for (i = 0; i < 256; i++) QR_GF_LOG[i] = 0;
+    int x = 1;
+    for (i = 0; i < 255; i++) {
+        QR_GF_EXP[i] = x;
+        QR_GF_LOG[x] = i;
+        x = x << 1;
+        if (x & 0x100) x = x ^ QR_GF_PRIM;
+    }
+    for (i = 255; i < 512; i++) {
+        QR_GF_EXP[i] = QR_GF_EXP[i - 255];
+    }
+    QR_GF_INITIALIZED = 1;
+}
+
+// GF(256) multiplication.
+int qrGfMul(int a, int b) {
+    if (a == 0 || b == 0) return 0;
+    return QR_GF_EXP[QR_GF_LOG[a & 0xFF] + QR_GF_LOG[b & 0xFF]];
+}
+
+// Build the Reed-Solomon divisor polynomial of degree n into
+// QR_RS_DIVISOR (length n; the leading coefficient 1 is implicit).
+void qrRsBuildDivisor(int n) {
+    int i, j;
+    for (i = 0; i < n; i++) QR_RS_DIVISOR[i] = 0;
+    QR_RS_DIVISOR[n - 1] = 1;
+    int root = 1;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            QR_RS_DIVISOR[j] = qrGfMul(QR_RS_DIVISOR[j], root);
+            if (j + 1 < n) QR_RS_DIVISOR[j] = QR_RS_DIVISOR[j] ^ QR_RS_DIVISOR[j + 1];
+        }
+        root = qrGfMul(root, 2);
+    }
+    QR_RS_DIVISOR_LEN = n;
+}
+
+// Reed-Solomon encode one block.
+// Reads dataLen bytes from QR_CODEWORDS[dataStart..dataStart+dataLen-1]
+// and writes n EC bytes into QR_RS_ECC[0..n-1] using QR_RS_DIVISOR.
+//
+// (ULP user-defined functions cannot take array parameters, so this
+// reads directly from the QR_CODEWORDS global.)
+void qrRsEncodeBlock(int dataStart, int dataLen, int n) {
+    int i, j;
+    for (i = 0; i < n; i++) QR_RS_ECC[i] = 0;
+    for (i = 0; i < dataLen; i++) {
+        int factor = (QR_CODEWORDS[dataStart + i] & 0xFF) ^ QR_RS_ECC[0];
+        for (j = 0; j < n - 1; j++) {
+            QR_RS_ECC[j] = QR_RS_ECC[j + 1];
+        }
+        QR_RS_ECC[n - 1] = 0;
+        for (j = 0; j < n; j++) {
+            QR_RS_ECC[j] = QR_RS_ECC[j] ^ qrGfMul(factor, QR_RS_DIVISOR[j]);
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// 3. Data encoding pipeline (bit stream -> codewords -> blocks -> EC -> interleave)
+// -------------------------------------------------------------------------
+
+// Bit stream
+int QR_BITS[];
+int QR_BIT_COUNT = 0;
+
+// Per-block decomposition: each block is a (offset, length) pair into QR_CODEWORDS.
+int QR_BLOCK_OFFSET[];
+int QR_BLOCK_LEN[];
+int QR_BLOCK_COUNT = 0;
+// EC bytes of all blocks concatenated, EC_PER_BLOCK bytes per block.
+int QR_BLOCK_EC[];
+int QR_EC_PER_BLOCK = 0;
+
+// Final interleaved codeword sequence (data + EC).
+int QR_INTERLEAVED[];
+int QR_INTERLEAVED_LEN = 0;
+
+// Append numBits of value (MSB first) to the bit stream.
+void qrAppendBits(int value, int numBits) {
+    int i;
+    for (i = numBits - 1; i >= 0; i--) {
+        QR_BITS[QR_BIT_COUNT] = (value >> i) & 1;
+        QR_BIT_COUNT++;
+    }
+}
+
+// Encode the input string in byte mode (mode indicator + char count + bytes).
+// Returns 0 on success, -1 on overflow.
+int qrEncodeByteMode(string data, int version) {
+    QR_BIT_COUNT = 0;
+    int dataLen = strlen(data);
+    qrAppendBits(qrModeIndicator(MODE_BYTE), 4);
+    int ccBits = qrCharCountBits(MODE_BYTE, version);
+    if (dataLen >= (1 << ccBits)) return -1;
+    qrAppendBits(dataLen, ccBits);
+    int i;
+    for (i = 0; i < dataLen; i++) {
+        qrAppendBits(data[i] & 0xFF, 8);
+    }
+    return 0;
+}
+
+// Mode dispatcher. Currently only MODE_BYTE is implemented; numeric/alphanum
+// will plug in here without changing any other section.
+int qrEncodeData(string data, int mode, int version) {
+    if (mode == MODE_BYTE) return qrEncodeByteMode(data, version);
+    return -1;
+}
+
+// Choose the smallest version V1..QR_MAX_VERSION that fits the encoded data.
+int qrChooseVersion(int dataLen, int mode, int ecc) {
+    int v;
+    for (v = 1; v <= QR_MAX_VERSION; v++) {
+        int capBits = qrDataCodewords(v, ecc) * 8;
+        if (capBits < 0) continue;
+        int needed = 4 + qrCharCountBits(mode, v) + dataLen * 8;
+        if (needed <= capBits) return v;
+    }
+    return -1;
+}
+
+// Pad the bit stream with terminator + byte padding, then pack to bytes
+// and append alternating 0xEC/0x11 padding bytes up to totalDataCodewords.
+void qrPadAndPack(int totalDataCodewords) {
+    int totalBits = totalDataCodewords * 8;
+    int term = 4;
+    if (QR_BIT_COUNT + term > totalBits) term = totalBits - QR_BIT_COUNT;
+    int i;
+    for (i = 0; i < term; i++) QR_BITS[QR_BIT_COUNT++] = 0;
+
+    while ((QR_BIT_COUNT % 8) != 0) QR_BITS[QR_BIT_COUNT++] = 0;
+
+    int byteCount = QR_BIT_COUNT / 8;
+    int b;
+    for (b = 0; b < byteCount; b++) {
+        int v = 0;
+        for (i = 0; i < 8; i++) v = (v << 1) | QR_BITS[b * 8 + i];
+        QR_CODEWORDS[b] = v;
+    }
+    int useEc = 1;
+    while (byteCount < totalDataCodewords) {
+        QR_CODEWORDS[byteCount++] = useEc ? QR_PAD_BYTE_1 : QR_PAD_BYTE_2;
+        useEc = !useEc;
+    }
+    QR_CODEWORDS_LEN = totalDataCodewords;
+}
+
+// Split QR_CODEWORDS into blocks per the (group1, group2) structure.
+void qrSplitBlocks(int version, int ecc) {
+    int g1c = qrG1Count(version, ecc);
+    int g1d = qrG1DataPerBlock(version, ecc);
+    int g2c = qrG2Count(version, ecc);
+    int g2d = qrG2DataPerBlock(version, ecc);
+    QR_BLOCK_COUNT = g1c + g2c;
+    int off = 0;
+    int b;
+    for (b = 0; b < g1c; b++) {
+        QR_BLOCK_OFFSET[b] = off;
+        QR_BLOCK_LEN[b]    = g1d;
+        off += g1d;
+    }
+    for (b = 0; b < g2c; b++) {
+        QR_BLOCK_OFFSET[g1c + b] = off;
+        QR_BLOCK_LEN[g1c + b]    = g2d;
+        off += g2d;
+    }
+}
+
+// Compute Reed-Solomon EC for every block.
+void qrComputeEcAllBlocks(int version, int ecc) {
+    int n = qrEcPerBlock(version, ecc);
+    QR_EC_PER_BLOCK = n;
+    qrRsBuildDivisor(n);
+    int b, j;
+    for (b = 0; b < QR_BLOCK_COUNT; b++) {
+        qrRsEncodeBlock(QR_BLOCK_OFFSET[b], QR_BLOCK_LEN[b], n);
+        for (j = 0; j < n; j++) {
+            QR_BLOCK_EC[b * n + j] = QR_RS_ECC[j];
+        }
+    }
+}
+
+// Interleave data and EC codewords into QR_INTERLEAVED in QR Code order.
+void qrInterleave() {
+    int i, b;
+    int maxDataLen = 0;
+    for (b = 0; b < QR_BLOCK_COUNT; b++) {
+        if (QR_BLOCK_LEN[b] > maxDataLen) maxDataLen = QR_BLOCK_LEN[b];
+    }
+    int out = 0;
+    for (i = 0; i < maxDataLen; i++) {
+        for (b = 0; b < QR_BLOCK_COUNT; b++) {
+            if (i < QR_BLOCK_LEN[b]) {
+                QR_INTERLEAVED[out++] = QR_CODEWORDS[QR_BLOCK_OFFSET[b] + i];
+            }
+        }
+    }
+    int n = QR_EC_PER_BLOCK;
+    for (i = 0; i < n; i++) {
+        for (b = 0; b < QR_BLOCK_COUNT; b++) {
+            QR_INTERLEAVED[out++] = QR_BLOCK_EC[b * n + i];
+        }
+    }
+    QR_INTERLEAVED_LEN = out;
+}
+
+// -------------------------------------------------------------------------
+// 4. Matrix construction, masking, format/version info, serialization
+// -------------------------------------------------------------------------
+
+// Matrix state. Flat NxN buffers indexed as r*QR_SIZE + c.
+int QR_MATRIX[];
+int QR_FN_MASK[];   // 1 = function module (locked), 0 = data module
+int QR_SIZE = 0;
+int QR_VERSION = 0;
+int QR_ECC = 0;
+
+// Output: one "0/1" string per matrix row.
+string QR_OUTPUT_LINES[];
+int QR_OUTPUT_LINES_COUNT = 0;
+
+// Module accessors
+void qrSetMod(int r, int c, int v) {
+    QR_MATRIX[r * QR_SIZE + c] = v ? 1 : 0;
+}
+int qrGetMod(int r, int c) {
+    return QR_MATRIX[r * QR_SIZE + c];
+}
+void qrMarkFn(int r, int c) {
+    QR_FN_MASK[r * QR_SIZE + c] = 1;
+}
+int qrIsFn(int r, int c) {
+    return QR_FN_MASK[r * QR_SIZE + c];
+}
+void qrSetFn(int r, int c, int v) {
+    qrSetMod(r, c, v);
+    qrMarkFn(r, c);
+}
+
+void qrInitMatrix(int version) {
+    QR_VERSION = version;
+    QR_SIZE = qrMatrixSize(version);
+    int total = QR_SIZE * QR_SIZE;
+    int i;
+    for (i = 0; i < total; i++) {
+        QR_MATRIX[i]  = 0;
+        QR_FN_MASK[i] = 0;
+    }
+}
+
+// Draw the 7x7 finder block at top-left corner (br, bc) plus its 1-module
+// inside-edge separator.
+void qrDrawFinder(int br, int bc) {
+    int dr, dc;
+    for (dr = -1; dr <= 7; dr++) {
+        for (dc = -1; dc <= 7; dc++) {
+            int r = br + dr;
+            int c = bc + dc;
+            if (r < 0 || r >= QR_SIZE || c < 0 || c >= QR_SIZE) continue;
+            int v = 0;
+            if (dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6) {
+                int onBorder = (dr == 0 || dr == 6 || dc == 0 || dc == 6);
+                int inCenter = (dr >= 2 && dr <= 4 && dc >= 2 && dc <= 4);
+                if (onBorder || inCenter) v = 1;
+            }
+            qrSetFn(r, c, v);
+        }
+    }
+}
+
+void qrPlaceFinders() {
+    qrDrawFinder(0, 0);                       // top-left
+    qrDrawFinder(0, QR_SIZE - 7);             // top-right
+    qrDrawFinder(QR_SIZE - 7, 0);             // bottom-left
+}
+
+void qrPlaceTiming() {
+    int i;
+    for (i = 8; i < QR_SIZE - 8; i++) {
+        int v = (i & 1) == 0 ? 1 : 0;
+        qrSetFn(6, i, v);
+        qrSetFn(i, 6, v);
+    }
+}
+
+// Draw a 5x5 alignment pattern centered at (cr, cc).
+void qrDrawAlignment(int cr, int cc) {
+    int dr, dc;
+    for (dr = -2; dr <= 2; dr++) {
+        for (dc = -2; dc <= 2; dc++) {
+            int r = cr + dr;
+            int c = cc + dc;
+            int onBorder = (dr == -2 || dr == 2 || dc == -2 || dc == 2);
+            int isCenter = (dr == 0 && dc == 0);
+            int v = (onBorder || isCenter) ? 1 : 0;
+            qrSetFn(r, c, v);
+        }
+    }
+}
+
+void qrPlaceAlignments(int version) {
+    int n = qrAlignCount(version);
+    if (n == 0) return;
+    int i, j;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            // Skip the 3 finder corners.
+            if (i == 0 && j == 0) continue;
+            if (i == 0 && j == n - 1) continue;
+            if (i == n - 1 && j == 0) continue;
+            int cr = qrAlignPos(version, i);
+            int cc = qrAlignPos(version, j);
+            qrDrawAlignment(cr, cc);
+        }
+    }
+}
+
+// Format / version info reservations
+void qrReserveFormatInfo() {
+    int i;
+    for (i = 0; i <= 8; i++) {
+        if (i != 6) qrMarkFn(8, i);
+        if (i != 6) qrMarkFn(i, 8);
+    }
+    for (i = QR_SIZE - 8; i < QR_SIZE; i++) {
+        qrMarkFn(8, i);
+    }
+    for (i = QR_SIZE - 7; i < QR_SIZE; i++) {
+        qrMarkFn(i, 8);
+    }
+    qrSetFn(QR_SIZE - 8, 8, 1);
+}
+
+void qrReserveVersionInfo(int version) {
+    if (version < 7) return;
+    int r, c;
+    for (r = 0; r < 6; r++) {
+        for (c = QR_SIZE - 11; c < QR_SIZE - 8; c++) {
+            qrMarkFn(r, c);
+        }
+    }
+    for (r = QR_SIZE - 11; r < QR_SIZE - 8; r++) {
+        for (c = 0; c < 6; c++) {
+            qrMarkFn(r, c);
+        }
+    }
+}
+
+// Place data codewords following the QR Code zigzag convention.
+void qrPlaceDataCodewords() {
+    int totalBits = QR_INTERLEAVED_LEN * 8;
+    int i = 0;
+    int right = QR_SIZE - 1;
+    while (right >= 1) {
+        if (right == 6) right = 5;  // skip the timing column
+        int vert;
+        for (vert = 0; vert < QR_SIZE; vert++) {
+            int j;
+            for (j = 0; j < 2; j++) {
+                int x = right - j;
+                int upward = (((right + 1) & 2) == 0);
+                int y = upward ? (QR_SIZE - 1 - vert) : vert;
+                if (qrIsFn(y, x) == 0) {
+                    int bit = 0;
+                    if (i < totalBits) {
+                        int byteIndex = i / 8;
+                        int bitIndex  = 7 - (i & 7);
+                        bit = (QR_INTERLEAVED[byteIndex] >> bitIndex) & 1;
+                        i++;
+                    }
+                    qrSetMod(y, x, bit);
+                }
+            }
+        }
+        right = right - 2;
+    }
+}
+
+// Mask functions
+int qrMaskBit(int mask, int r, int c) {
+    if (mask == 0) return ((r + c) % 2) == 0;
+    if (mask == 1) return (r % 2) == 0;
+    if (mask == 2) return (c % 3) == 0;
+    if (mask == 3) return ((r + c) % 3) == 0;
+    if (mask == 4) return (((r / 2) + (c / 3)) % 2) == 0;
+    if (mask == 5) return (((r * c) % 2) + ((r * c) % 3)) == 0;
+    if (mask == 6) return ((((r * c) % 2) + ((r * c) % 3)) % 2) == 0;
+    if (mask == 7) return ((((r + c) % 2) + ((r * c) % 3)) % 2) == 0;
+    return 0;
+}
+
+// XOR the mask onto data modules only. Function modules are not touched.
+void qrApplyMask(int mask) {
+    int r, c;
+    for (r = 0; r < QR_SIZE; r++) {
+        for (c = 0; c < QR_SIZE; c++) {
+            if (qrIsFn(r, c) == 0 && qrMaskBit(mask, r, c)) {
+                int v = qrGetMod(r, c) ^ 1;
+                qrSetMod(r, c, v);
+            }
+        }
+    }
+}
+
+// Format info encoding (BCH(15,5)). Returns the 15-bit format info string
+// for (ecc, mask), already XORed with the mask 0x5412.
+int qrEncodeFormat(int ecc, int mask) {
+    int data = (qrEccBits(ecc) << 3) | (mask & 7);
+    int rem = data;
+    int i;
+    for (i = 0; i < 10; i++) {
+        rem = rem << 1;
+        if (rem & 0x400) rem = rem ^ QR_BCH_GEN_FORMAT;
+    }
+    int bits = ((data << 10) | rem) ^ QR_BCH_MASK_FORMAT;
+    return bits & 0x7FFF;
+}
+
+// Place (or clear) the 15 format-info bits in both copies. Each bit appears
+// in two cells: one in column 8 ("vertical") and one in row 8 ("horizontal").
+// Placement matches the QR Code 2005 specification (Figure 19).
+void qrWriteFormatBits(int bits) {
+    int i;
+    for (i = 0; i < 15; i++) {
+        int b = (bits >> i) & 1;
+        int r;
+        if (i < 6)      r = i;
+        else if (i < 8) r = i + 1;
+        else            r = QR_SIZE - 15 + i;
+        qrSetMod(r, 8, b);
+        int c;
+        if (i < 8)      c = QR_SIZE - 1 - i;
+        else if (i < 9) c = 7;
+        else            c = 14 - i;
+        qrSetMod(8, c, b);
+    }
+    qrSetMod(QR_SIZE - 8, 8, 1);  // always-dark module
+}
+
+void qrPlaceFormatInfo(int ecc, int mask) {
+    qrWriteFormatBits(qrEncodeFormat(ecc, mask));
+}
+
+void qrClearFormatInfo() {
+    qrWriteFormatBits(0);
+    qrSetMod(QR_SIZE - 8, 8, 1);
+}
+
+// Version info encoding (V7+)
+int qrEncodeVersion(int version) {
+    int rem = version;
+    int i;
+    for (i = 0; i < 12; i++) {
+        rem = rem << 1;
+        if (rem & 0x1000) rem = rem ^ QR_BCH_GEN_VERSION;
+    }
+    return ((version << 12) | rem) & 0x3FFFF;
+}
+
+void qrPlaceVersionInfo(int version) {
+    if (version < 7) return;
+    int bits = qrEncodeVersion(version);
+    int i;
+    for (i = 0; i < 18; i++) {
+        int b = (bits >> i) & 1;
+        int a = QR_SIZE - 11 + (i % 3);
+        int d = i / 3;
+        qrSetMod(a, d, b);
+        qrSetMod(d, a, b);
+    }
+}
+
+// Penalty scoring (rule N1..N4 from the QR spec).
+int qrPenaltyN1Run(int isRow, int idx) {
+    int run = 0;
+    int prev = -1;
+    int penalty = 0;
+    int i;
+    for (i = 0; i < QR_SIZE; i++) {
+        int v = isRow ? qrGetMod(idx, i) : qrGetMod(i, idx);
+        if (v == prev) {
+            run++;
+            if (run == 5) penalty += 3;
+            else if (run > 5) penalty += 1;
+        } else {
+            run = 1;
+            prev = v;
+        }
+    }
+    return penalty;
+}
+
+int qrPenaltyN1() {
+    int total = 0;
+    int i;
+    for (i = 0; i < QR_SIZE; i++) {
+        total += qrPenaltyN1Run(1, i);
+        total += qrPenaltyN1Run(0, i);
+    }
+    return total;
+}
+
+int qrPenaltyN2() {
+    int total = 0;
+    int r, c;
+    for (r = 0; r < QR_SIZE - 1; r++) {
+        for (c = 0; c < QR_SIZE - 1; c++) {
+            int v = qrGetMod(r, c);
+            if (v == qrGetMod(r, c + 1) &&
+                v == qrGetMod(r + 1, c) &&
+                v == qrGetMod(r + 1, c + 1)) {
+                total += 3;
+            }
+        }
+    }
+    return total;
+}
+
+// Detect 11-module patterns "10111010000" or "00001011101" in row/col.
+int qrPenaltyN3LineMatch(int v0, int v1, int v2, int v3, int v4,
+                         int v5, int v6, int v7, int v8, int v9, int v10) {
+    int hits = 0;
+    if (v0 == 1 && v1 == 0 && v2 == 1 && v3 == 1 && v4 == 1 &&
+        v5 == 0 && v6 == 1 && v7 == 0 && v8 == 0 && v9 == 0 && v10 == 0) hits++;
+    if (v0 == 0 && v1 == 0 && v2 == 0 && v3 == 0 && v4 == 1 &&
+        v5 == 0 && v6 == 1 && v7 == 1 && v8 == 1 && v9 == 0 && v10 == 1) hits++;
+    return hits;
+}
+
+int qrPenaltyN3() {
+    int total = 0;
+    int r, c;
+    for (r = 0; r < QR_SIZE; r++) {
+        for (c = 0; c <= QR_SIZE - 11; c++) {
+            total += 40 * qrPenaltyN3LineMatch(
+                qrGetMod(r, c), qrGetMod(r, c+1), qrGetMod(r, c+2),
+                qrGetMod(r, c+3), qrGetMod(r, c+4), qrGetMod(r, c+5),
+                qrGetMod(r, c+6), qrGetMod(r, c+7), qrGetMod(r, c+8),
+                qrGetMod(r, c+9), qrGetMod(r, c+10));
+        }
+    }
+    for (c = 0; c < QR_SIZE; c++) {
+        for (r = 0; r <= QR_SIZE - 11; r++) {
+            total += 40 * qrPenaltyN3LineMatch(
+                qrGetMod(r, c), qrGetMod(r+1, c), qrGetMod(r+2, c),
+                qrGetMod(r+3, c), qrGetMod(r+4, c), qrGetMod(r+5, c),
+                qrGetMod(r+6, c), qrGetMod(r+7, c), qrGetMod(r+8, c),
+                qrGetMod(r+9, c), qrGetMod(r+10, c));
+        }
+    }
+    return total;
+}
+
+int qrPenaltyN4() {
+    int total = QR_SIZE * QR_SIZE;
+    int dark = 0;
+    int r, c;
+    for (r = 0; r < QR_SIZE; r++) {
+        for (c = 0; c < QR_SIZE; c++) {
+            if (qrGetMod(r, c) == 1) dark++;
+        }
+    }
+    int percent10 = (dark * 200) / total;
+    int dev2 = percent10 - 100;
+    if (dev2 < 0) dev2 = -dev2;
+    int k = dev2 / 10;
+    return k * 10;
+}
+
+int qrComputePenalty() {
+    return qrPenaltyN1() + qrPenaltyN2() + qrPenaltyN3() + qrPenaltyN4();
+}
+
+// Mask selection: try all 8 masks, keep the lowest-penalty one.
+int qrSelectBestMask(int ecc) {
+    int bestMask = 0;
+    int bestPenalty = -1;
+    int m;
+    for (m = 0; m < 8; m++) {
+        qrApplyMask(m);
+        qrPlaceFormatInfo(ecc, m);
+        int p = qrComputePenalty();
+        if (bestPenalty < 0 || p < bestPenalty) {
+            bestPenalty = p;
+            bestMask = m;
+        }
+        qrApplyMask(m);     // XOR is involutive: undoes the mask
+        qrClearFormatInfo();
+    }
+    return bestMask;
+}
+
+// Serialize matrix to "0/1" string lines.
+void qrSerializeMatrix() {
+    int r, c;
+    QR_OUTPUT_LINES_COUNT = QR_SIZE;
+    for (r = 0; r < QR_SIZE; r++) {
+        string line = "";
+        for (c = 0; c < QR_SIZE; c++) {
+            line += qrGetMod(r, c) ? "1" : "0";
+        }
+        QR_OUTPUT_LINES[r] = line;
+    }
+}
+
+// -------------------------------------------------------------------------
+// 5. Public API
+// -------------------------------------------------------------------------
+
+// Last error code (for diagnostics).
+//   0  : success
+//  -1  : data too long for supported versions
+//  -2  : unsupported mode
+//  -3  : unsupported ECC level
+//  -4  : encoding failure
+int QR_LAST_ERROR = 0;
+
+int qrGenerate(string data, int ecc, int mode) {
+    QR_LAST_ERROR = 0;
+
+    if (mode != MODE_BYTE) {
+        QR_LAST_ERROR = -2;
+        return -1;
+    }
+    if (ecc != ECC_L) {
+        QR_LAST_ERROR = -3;
+        return -1;
+    }
+
+    int dataLen = strlen(data);
+    int version = qrChooseVersion(dataLen, mode, ecc);
+    if (version < 0) {
+        QR_LAST_ERROR = -1;
+        return -1;
+    }
+
+    qrGfInit();
+
+    if (qrEncodeData(data, mode, version) != 0) {
+        QR_LAST_ERROR = -4;
+        return -1;
+    }
+    qrPadAndPack(qrDataCodewords(version, ecc));
+    qrSplitBlocks(version, ecc);
+    qrComputeEcAllBlocks(version, ecc);
+    qrInterleave();
+
+    qrInitMatrix(version);
+    qrPlaceFinders();
+    qrPlaceTiming();
+    qrPlaceAlignments(version);
+    qrReserveFormatInfo();
+    qrReserveVersionInfo(version);
+    qrPlaceDataCodewords();
+    // Version info bits are static for a given version; place them before
+    // mask selection so the penalty score reflects the final matrix state.
+    qrPlaceVersionInfo(version);
+
+    int bestMask = qrSelectBestMask(ecc);
+    qrApplyMask(bestMask);
+    qrPlaceFormatInfo(ecc, bestMask);
+
+    qrSerializeMatrix();
+    return QR_OUTPUT_LINES_COUNT;
+}
+
+// =========================================================================
+// End of native QR Code generation engine
+// =========================================================================
+
 // Global variables
-string VERSION = "1.1.2";
+string VERSION = "1.2.0";
 string LATEST_VERSION = "";
 int PosX, PosY;
 string LANG;  // Current language code
@@ -283,18 +1156,40 @@ void addText(string key, string value) {
     TextCount++;
 }
 
-// Function to get API URL for current version
-string getApiUrl() {
+// Compare two semantic version strings ("major.minor.patch") component
+// by component. Returns:
+//    1 if a >  b   (e.g. "1.2.0" >  "1.1.2")
+//    0 if a == b
+//   -1 if a <  b
+// Missing components are treated as 0 (so "1.2" == "1.2.0").
+int versionCompare(string a, string b) {
+    string pa[];
+    string pb[];
+    int na = strsplit(pa, a, '.');
+    int nb = strsplit(pb, b, '.');
+    int n = na > nb ? na : nb;
+    int i;
+    for (i = 0; i < n; i++) {
+        int va = i < na ? strtol(pa[i]) : 0;
+        int vb = i < nb ? strtol(pb[i]) : 0;
+        if (va > vb) return  1;
+        if (va < vb) return -1;
+    }
+    return 0;
+}
+
+// Function to check the latest available version and verify that the
+// current ULP version is still supported. Network failures are silent
+// (the QR code is generated locally and does not depend on this check).
+void checkVersionAvailability() {
     string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
     
-    // Create a temporary file that will be auto-deleted
     output(csvFile, "wD") {
-        printf("");  // Create empty file
+        printf("");
     }
     
     string cmd;
     if (IsWindows()) {
-        // Create a temporary VBS script
         string vbsFile = filedir(argv[0]) + "temp_version_check.vbs";
         output(vbsFile, "wD") {
             printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
@@ -313,46 +1208,24 @@ string getApiUrl() {
         cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
     }
     
-    int exitCode = system(cmd);
-    int i;
+    if (system(cmd) != 0) return;
     
-    if (exitCode != 0) {
-        dlgMessageBox(getText("ERROR_NETWORK") + "\n\n" +
-                     getText("DEBUG_INFO") + "\n" +
-                     "- Exit Code: " + exitCode + "\n" +
-                     "- Command: " + cmd + "\n" +
-                     "- ULP Version: " + VERSION + "\n\n" +
-                     "Please check your internet connection.",
-                     getText("BUTTON_OK"));
-        return "";
-    }
-    
-    // Read the CSV file into an array
     string csvLines[];
     int nLines = fileread(csvLines, csvFile);
+    if (nLines <= 1) return;
     
-    if (nLines <= 1) {  // File must have at least 2 lines (header + data)
-        return "";
+    string fields[];
+    int n = strsplit(fields, csvLines[1], ',');
+    if (n >= 1) {
+        LATEST_VERSION = fields[0];
     }
     
-    // Find the latest version available (first line after header)
-    if (nLines > 1) {
-        string fields[];
-        int n = strsplit(fields, csvLines[1], ',');
-        if (n >= 4) {
-            LATEST_VERSION = fields[0];  // First version is the most recent
-        }
-    }
-    
-    string api_url = "";  // Variable to store the API URL
-    
-    // Loop through lines to find current version
+    int i;
     for (i = 1; i < nLines; i++) {
-        string fields[];
-        int n = strsplit(fields, csvLines[i], ',');
-        if (n >= 4 && fields[0] == VERSION) {
-            // Check if version is supported
-            if (n >= 5 && fields[4] == "0") {
+        string row[];
+        int m = strsplit(row, csvLines[i], ',');
+        if (m >= 1 && row[0] == VERSION) {
+            if (m >= 5 && row[4] == "0") {
                 dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
                             "Debug Info:\n" +
                             "- ULP Version: " + VERSION + "\n" +
@@ -362,12 +1235,9 @@ string getApiUrl() {
                             "OK");
                 exit(1);
             }
-            api_url = fields[3];  // Store the API URL
             break;
         }
     }
-    
-    return api_url;  // Return the API URL
 }
 
 // Function to trim whitespace from string
@@ -506,14 +1376,9 @@ void main(void) {
     // Load localized texts first
     loadLocalizedTexts();
     
-    // Get API URL and latest version from versions.csv BEFORE creating the dialog
-    string pythonScriptUrl = getApiUrl();
-    if (pythonScriptUrl == "") {
-        dlgMessageBox("Error: Could not get API URL.\n" +
-                     "Using default URL.",
-                     "OK");
-        pythonScriptUrl = "https://blaisebarrette.pythonanywhere.com/generate-qr";
-    }
+    // Check for new version / supported status (silent fallback if offline).
+    // The QR code itself is generated locally below.
+    checkVersionAvailability();
     
     // Initialize variables
     string Url = "";
@@ -619,11 +1484,11 @@ void main(void) {
                 }
                 dlgHBoxLayout {
                     string versionText;
-                    if (LATEST_VERSION != "" && LATEST_VERSION != VERSION) {
-                        // Older version detected
+                    if (LATEST_VERSION != "" && versionCompare(LATEST_VERSION, VERSION) > 0) {
+                        // A strictly newer version is available
                         sprintf(versionText, "v%s (%s available)", VERSION, LATEST_VERSION);
                     } else {
-                        // Version is up to date
+                        // Current version is up-to-date or ahead (e.g. dev build)
                         sprintf(versionText, "v%s", VERSION);
                     }
                     dlgLabel(versionText);
@@ -652,78 +1517,30 @@ void main(void) {
         schematic(S) displayUnit = S.grid.unit;
     }
     
-    // Prepare file paths
-    string tmpFile = filedir(argv[0]) + "qr_temp.txt";
+    // Prepare script output file. The QR matrix itself is generated locally.
     string scriptFile = filedir(argv[0]) + "qr_script.scr";
     
-    // Create temporary files that will be auto-deleted
-    output(tmpFile, "wD") {
-        printf("");  // Create empty file
-    }
-    
-    // Generate QR code using the retrieved URL
-    string cmd;
-    if (IsWindows()) {
-        // Create a temporary VBS script
-        string vbsFile = filedir(argv[0]) + "temp_request.vbs";
-        output(vbsFile, "wD") {
-            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
-            printf("http.open \"GET\", \"%s?url=%s&size=%d\", False\n", pythonScriptUrl, Url, Size);
-            printf("http.send\n");
-            printf("If http.Status = 200 Then\n");
-            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
-            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", tmpFile);
-            printf("    file.Write(http.responseText)\n");
-            printf("    file.Close\n");
-            printf("End If\n");
-            printf("Set http = Nothing\n");
-        }
-        cmd = "wscript \"" + vbsFile + "\"";
-    } else {
-        sprintf(cmd, "curl -m 10 -s \"%s?url=%s&size=%d\" > \"%s\"", pythonScriptUrl, Url, Size, tmpFile);
-    }
-    // Exécuter la commande
-    if (system(cmd) != 0) {
-        dlgMessageBox("Error: QR Code generation failed\n\n" +
-                     "Debug Info:\n" +
-                     "- API URL: " + pythonScriptUrl + "\n" +
-                     "- Command: " + cmd + "\n" +
-                     "Please check your internet connection or try again later.",
-                     "OK");
-        exit(1);
-    }
-    
-    // Verify QR code response
-    if (filesize(tmpFile) <= 0) {
-        dlgMessageBox("Error: Empty response from QR Code service\n\n" +
-                     "Debug Info:\n" +
-                     "- API URL: " + pythonScriptUrl + "\n" +
-                     "Please try again later.",
-                     "OK");
-        exit(1);
-    }
-    
-    // Check response content
-    string firstLine;
-    if (fileread(firstLine, tmpFile) > 0) {
-        if (strstr(firstLine, "Error") >= 0 || strstr(firstLine, "<!DOCTYPE") >= 0) {
-            dlgMessageBox("Error: Invalid response from QR Code service\n\n" +
-                         "Debug Info:\n" +
-                         "- Response: " + firstLine + "\n" +
-                         "- API URL: " + pythonScriptUrl + "\n" +
-                         "Please try again later.",
-                         "OK");
-            exit(1);
-        }
-    }
-    
-    // Read QR code data
-    string lines[];
-    int nLines = fileread(lines, tmpFile);
-    
+    // Generate the QR code matrix natively (no network, no Python).
+    int nLines = qrGenerate(Url, ECC_L, MODE_BYTE);
     if (nLines <= 0) {
-        dlgMessageBox("Error: Could not read QR code data.");
+        string err;
+        if (QR_LAST_ERROR == -1) {
+            sprintf(err, "%s\n\nThe URL is too long for the supported QR versions (V1-V10, ECC L).\n" +
+                         "Please use a shorter URL or wait for a future release with extended version support.",
+                    getText("ERROR_QR_GENERATION"));
+        } else {
+            sprintf(err, "%s\n\nDebug info:\n- ULP Version: %s\n- Internal error code: %d",
+                    getText("ERROR_QR_GENERATION"), VERSION, QR_LAST_ERROR);
+        }
+        dlgMessageBox(err, "OK");
         exit(1);
+    }
+    
+    // Reuse the local lines[] consumed by the Eagle script generation block.
+    string lines[];
+    int li;
+    for (li = 0; li < nLines; li++) {
+        lines[li] = QR_OUTPUT_LINES[li];
     }
     
     // Generate Eagle script
