@@ -1,6 +1,14 @@
 // QR Code Generator for Eagle/Fusion Electronics
 // This ULP generates QR codes directly on PCB layers
-// Version 1.2.0 - native QR generation (no Python server required)
+// Version 1.2.0 - fully self-contained (native QR generation, embedded
+//                 localization, no remote calls, no external file imports).
+//
+// Starting with this release, the ULP is a single self-contained file:
+//   - QR Code generation runs entirely in pure ULP (no Python server).
+//   - All UI text translations are embedded in this file (no localization.csv).
+//   - The legacy version-check feature has been removed; the previous
+//     versions.csv mechanism is preserved server-side only for users still
+//     running ULP releases earlier than 1.2.0.
 
 #usage "en: <b>QR Code Generator for Fusion Electronics</b>\n"
        "<p>"
@@ -1000,10 +1008,7 @@ int qrGenerate(string data, int ecc, int mode) {
 
 // Global variables
 string VERSION = "1.2.0";
-string LATEST_VERSION = "";
-int PosX, PosY;
 string LANG;  // Current language code
-string debugGridInfo = "";  // Déplacer ici et supprimer la déclaration plus bas
 
 // Context constants and variable
 enum {
@@ -1029,29 +1034,11 @@ enum {
 int currentUnit = UNIT_MILS;  // Default to mils
 string UnitNames[] = {"mils", "inches", "mm"};
 
-// Function to get grid unit text
-string getGridUnitText(int displayUnit) {
-    switch(displayUnit) {
-        case 1: return "MM";      // GRID_UNIT_MM
-        case 2: return "MIL";     // GRID_UNIT_MIL
-        case 3: return "INCH";    // GRID_UNIT_INCH
-        default: return "UNKNOWN";
-    }
-}
-
 // Function to get default grid unit and scale
 int getDefaultGridUnit() {
     if (board) {
         board(B) {
-            // Get both display unit and actual grid unit
             int displayUnit = B.grid.unit;
-            real gridDist = B.grid.distance;
-            
-            // Store grid info for debug
-            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
-                    getGridUnitText(displayUnit), gridDist);
-            
-            // Map EAGLE grid units to our units
             switch(displayUnit) {
                 case 0:  // GRID_UNIT_MIC
                     return UNIT_MM;
@@ -1066,11 +1053,6 @@ int getDefaultGridUnit() {
     } else if (library) {
         library(L) {
             int displayUnit = L.grid.unit;
-            real gridDist = L.grid.distance;
-            
-            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
-                    getGridUnitText(displayUnit), gridDist);
-            
             switch(displayUnit) {
                 case 0:  // GRID_UNIT_MIC
                     return UNIT_MM;
@@ -1085,11 +1067,6 @@ int getDefaultGridUnit() {
     } else if (schematic) {
         schematic(S) {
             int displayUnit = S.grid.unit;
-            real gridDist = S.grid.distance;
-            
-            sprintf(debugGridInfo, "Grid Unit: %s, Distance: %.6f", 
-                    getGridUnitText(displayUnit), gridDist);
-            
             switch(displayUnit) {
                 case 0:  // GRID_UNIT_MIC
                     return UNIT_MM;
@@ -1131,14 +1108,6 @@ real convertFromMils(int size, int toUnit) {
     return real(size);
 }
 
-// Function to detect Windows OS
-int IsWindows() {
-    //Returns 1, if EAGLE is running under Windows (0 for Linux/Mac)
-    if ((strsub(argv[0],0,1)=="/") && (strsub(argv[0],0,2)!="//"))
-        return 0;
-    return 1;
-}
-
 // Function to get localized text by key
 string getText(string key) {
     for (int i = 0; i < TextCount; i++) {
@@ -1156,205 +1125,155 @@ void addText(string key, string value) {
     TextCount++;
 }
 
-// Compare two semantic version strings ("major.minor.patch") component
-// by component. Returns:
-//    1 if a >  b   (e.g. "1.2.0" >  "1.1.2")
-//    0 if a == b
-//   -1 if a <  b
-// Missing components are treated as 0 (so "1.2" == "1.2.0").
-int versionCompare(string a, string b) {
-    string pa[];
-    string pb[];
-    int na = strsplit(pa, a, '.');
-    int nb = strsplit(pb, b, '.');
-    int n = na > nb ? na : nb;
-    int i;
-    for (i = 0; i < n; i++) {
-        int va = i < na ? strtol(pa[i]) : 0;
-        int vb = i < nb ? strtol(pb[i]) : 0;
-        if (va > vb) return  1;
-        if (va < vb) return -1;
-    }
-    return 0;
-}
-
-// Function to check the latest available version and verify that the
-// current ULP version is still supported. Network failures are silent
-// (the QR code is generated locally and does not depend on this check).
-void checkVersionAvailability() {
-    string csvFile = filedir(argv[0]) + "TempVersionsFile.csv";
-    
-    output(csvFile, "wD") {
-        printf("");
-    }
-    
-    string cmd;
-    if (IsWindows()) {
-        string vbsFile = filedir(argv[0]) + "temp_version_check.vbs";
-        output(vbsFile, "wD") {
-            printf("Set http = CreateObject(\"Microsoft.XMLHTTP\")\n");
-            printf("http.open \"GET\", \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\", False\n");
-            printf("http.send\n");
-            printf("If http.Status = 200 Then\n");
-            printf("    Set fso = CreateObject(\"Scripting.FileSystemObject\")\n");
-            printf("    Set file = fso.CreateTextFile(\"%s\", True)\n", csvFile);
-            printf("    file.Write(http.responseText)\n");
-            printf("    file.Close\n");
-            printf("End If\n");
-            printf("Set http = Nothing\n");
-        }
-        cmd = "wscript \"" + vbsFile + "\"";
-    } else {
-        cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/versions.csv\" > \"" + csvFile + "\"";
-    }
-    
-    if (system(cmd) != 0) return;
-    
-    string csvLines[];
-    int nLines = fileread(csvLines, csvFile);
-    if (nLines <= 1) return;
-    
-    string fields[];
-    int n = strsplit(fields, csvLines[1], ',');
-    if (n >= 1) {
-        LATEST_VERSION = fields[0];
-    }
-    
-    int i;
-    for (i = 1; i < nLines; i++) {
-        string row[];
-        int m = strsplit(row, csvLines[i], ',');
-        if (m >= 1 && row[0] == VERSION) {
-            if (m >= 5 && row[4] == "0") {
-                dlgMessageBox("Error: This version of the ULP is no longer supported.\n\n" +
-                            "Debug Info:\n" +
-                            "- ULP Version: " + VERSION + "\n" +
-                            "- CSV Line: " + csvLines[i] + "\n\n" +
-                            "Please download the latest version to continue:\n" +
-                            "https://github.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/releases/latest",
-                            "OK");
-                exit(1);
-            }
-            break;
-        }
-    }
-}
-
-// Function to trim whitespace from string
-string trim(string str) {
-    string result = "";
-    int start = 0;
-    int end = strlen(str) - 1;
-    
-    // Find first non-space character
-    while (start < strlen(str)) {
-        if (strsub(str, start, 1) != " ") break;
-        start++;
-    }
-    
-    // Find last non-space character
-    while (end >= 0) {
-        if (strsub(str, end, 1) != " ") break;
-        end--;
-    }
-    
-    // Extract the trimmed string
-    if (start <= end) {
-        result = strsub(str, start, end - start + 1);
-    }
-    
-    return result;
-}
-
-// Function to load localized texts
-void loadLocalizedTexts() {
+// Initialize the in-memory localization table for the user's language.
+//
+// The texts are embedded directly into this ULP so that the program is
+// fully self-contained: no external CSV is downloaded, no temporary file
+// is written, and no network call is performed. Languages match the set
+// already supported by the project (en, fr, de, es, it, ja, ko, pl, pt,
+// zh, tr). Any unrecognized language code falls back to English.
+//
+// Only the keys actually consumed by the dialog code are populated here.
+// If a translation for a given language is missing for a key, getText()
+// will gracefully return the key itself (keeping the UI usable in any
+// edge case rather than producing an empty label).
+void initLocalizedTexts() {
     LANG = language();
-    if (LANG == "") LANG = "en";  // Default to English
-    
-    string csvFile = filedir(argv[0]) + "TempLocalizationFile.csv";
-    
-    // Create a temporary file that will be auto-deleted
-    output(csvFile, "wD") {
-        printf("");  // Create empty file
-    }
-    
-    string cmd;
-    if (IsWindows()) {
-        // Create a temporary VBS script
-        string vbsFile = filedir(argv[0]) + "temp_localization.vbs";
-        output(vbsFile, "wD") {
-            printf("Option Explicit\n");
-            printf("Dim http, stream, fso, file\n");
-            printf("Set http = CreateObject(\"MSXML2.XMLHTTP\")\n");  // Using MSXML2.XMLHTTP instead of Microsoft.XMLHTTP
-            printf("http.open \"GET\", \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\", False\n");
-            printf("http.send\n");
-            printf("If http.Status = 200 Then\n");
-            printf("    Set stream = CreateObject(\"ADODB.Stream\")\n");
-            printf("    stream.Open\n");
-            printf("    stream.Type = 2  'Text\n");
-            printf("    stream.Charset = \"UTF-8\"\n");
-            printf("    stream.WriteText http.responseText\n");
-            printf("    stream.SaveToFile \"%s\", 2\n", csvFile);
-            printf("    stream.Close\n");
-            printf("End If\n");
-            printf("Set http = Nothing\n");
-        }
-        cmd = "wscript \"" + vbsFile + "\"";
-    } else {
-        cmd = "curl -m 10 -s \"https://raw.githubusercontent.com/blaisebarrette/QRCode-ULP-for-Fusion-electronics/main/localization.csv\" > \"" + csvFile + "\"";
-    }
-    
-    if (system(cmd) != 0) {
-        return;  // Silently fall back to key names
-    }
-    
-    // Read the CSV file into an array
-    string csvLines[];
-    int nLines = fileread(csvLines, csvFile);
-    
-    if (nLines <= 0) {
-        return;  // Silently fall back to key names
-    }
-    
-    // Get language column index
-    string headers[];
-    int nCols = strsplit(headers, csvLines[0], ',');
-    int langCol = 1;  // Default to English (column 1)
-    int i;
-    
-    for (i = 0; i < nCols; i++) {
-        string header = trim(headers[i]);
-        if (header == LANG) {
-            langCol = i;
-            break;
-        }
-    }
-    
-    // Load texts
-    for (i = 1; i < nLines; i++) {
-        string fields[];
-        int n = strsplit(fields, csvLines[i], ',');
-        if (n > langCol) {
-            string key = trim(fields[0]);
-            string value = trim(fields[langCol]);
-            addText(key, value);
-        }
-    }
-}
+    if (LANG == "") LANG = "en";
 
-// Function to get context name
-string getContextName() {
-    switch (currentContext) {
-        case CONTEXT_BOARD:
-            return "Board";
-        case CONTEXT_SCHEMATIC:
-            return "Schematic";
-        case CONTEXT_PACKAGE:
-            return "Footprint";
-        case CONTEXT_SYMBOL:
-            return "Symbol";
-        default:
-            return "Unknown";
+    TextCount = 0;
+
+    if (LANG == "fr") {
+        addText("TITLE",               "Générateur de QR Code");
+        addText("SETTINGS_GROUP",      "Paramètres du QR Code");
+        addText("URL_LABEL",           "Entrez l'URL de votre QR code :");
+        addText("SIZE_LABEL",          "Entrez la taille (0.25-5.0 pouces / 250-5000 mils / 6.35-127 mm) :");
+        addText("LAYER_LABEL",         "Sélectionnez la couche :");
+        addText("POSITION_NOTE",       "Le QR code sera automatiquement placé dans le quadrant supérieur gauche.");
+        addText("ERROR_NO_URL",        "Aucune URL fournie. Opération annulée.");
+        addText("ERROR_QR_GENERATION", "Erreur : La génération du QR code a échoué");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Annuler");
+    }
+    else if (LANG == "de") {
+        addText("TITLE",               "QR-Code-Generator");
+        addText("SETTINGS_GROUP",      "QR-Code-Einstellungen");
+        addText("URL_LABEL",           "Geben Sie die URL für Ihren QR-Code ein:");
+        addText("SIZE_LABEL",          "Größe eingeben (0.25-5.0 Zoll / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Ebene auswählen:");
+        addText("POSITION_NOTE",       "Der QR-Code wird automatisch im oberen linken Quadranten platziert.");
+        addText("ERROR_NO_URL",        "Keine URL angegeben. Vorgang abgebrochen.");
+        addText("ERROR_QR_GENERATION", "Fehler: QR-Code-Generierung fehlgeschlagen");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Abbrechen");
+    }
+    else if (LANG == "es") {
+        addText("TITLE",               "Generador de código QR");
+        addText("SETTINGS_GROUP",      "Configuración del código QR");
+        addText("URL_LABEL",           "Ingrese la URL para su código QR:");
+        addText("SIZE_LABEL",          "Ingrese el tamaño (0.25-5.0 pulgadas / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Seleccione la capa:");
+        addText("POSITION_NOTE",       "El código QR se colocará automáticamente en el cuadrante superior izquierdo.");
+        addText("ERROR_NO_URL",        "No se proporcionó URL. Operación cancelada.");
+        addText("ERROR_QR_GENERATION", "Error: Falló la generación del código QR");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Cancelar");
+    }
+    else if (LANG == "it") {
+        addText("TITLE",               "Generatore di codici QR");
+        addText("SETTINGS_GROUP",      "Impostazioni codice QR");
+        addText("URL_LABEL",           "Inserisci l'URL per il tuo codice QR:");
+        addText("SIZE_LABEL",          "Inserisci dimensione (0.25-5.0 pollici / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Seleziona il layer:");
+        addText("POSITION_NOTE",       "Il codice QR verrà posizionato automaticamente nel quadrante superiore sinistro.");
+        addText("ERROR_NO_URL",        "Nessun URL fornito. Operazione annullata.");
+        addText("ERROR_QR_GENERATION", "Errore: Generazione del codice QR fallita");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Annulla");
+    }
+    else if (LANG == "ja") {
+        addText("TITLE",               "QRコードジェネレーター");
+        addText("SETTINGS_GROUP",      "QRコード設定");
+        addText("URL_LABEL",           "QRコードのURLを入力してください：");
+        addText("SIZE_LABEL",          "サイズを入力（0.25-5.0インチ / 250-5000ミル / 6.35-127 mm）：");
+        addText("LAYER_LABEL",         "レイヤーを選択：");
+        addText("POSITION_NOTE",       "QRコードは左上の象限に自動的に配置されます。");
+        addText("ERROR_NO_URL",        "URLが提供されていません。操作がキャンセルされました。");
+        addText("ERROR_QR_GENERATION", "エラー：QRコードの生成に失敗しました");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "キャンセル");
+    }
+    else if (LANG == "ko") {
+        addText("TITLE",               "QR 코드 생성기");
+        addText("SETTINGS_GROUP",      "QR 코드 설정");
+        addText("URL_LABEL",           "QR 코드의 URL을 입력하세요:");
+        addText("SIZE_LABEL",          "크기 입력 (0.25-5.0인치 / 250-5000밀 / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "레이어 선택:");
+        addText("POSITION_NOTE",       "QR 코드는 자동으로 좌측 상단에 배치됩니다.");
+        addText("ERROR_NO_URL",        "URL이 제공되지 않았습니다. 작업이 취소되었습니다.");
+        addText("ERROR_QR_GENERATION", "오류: QR 코드 생성 실패");
+        addText("BUTTON_OK",           "확인");
+        addText("BUTTON_CANCEL",       "취소");
+    }
+    else if (LANG == "pl") {
+        addText("TITLE",               "Generator kodów QR");
+        addText("SETTINGS_GROUP",      "Ustawienia kodu QR");
+        addText("URL_LABEL",           "Wprowadź adres URL dla kodu QR:");
+        addText("SIZE_LABEL",          "Wprowadź rozmiar (0.25-5.0 cali / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Wybierz warstwę:");
+        addText("POSITION_NOTE",       "Kod QR zostanie automatycznie umieszczony w lewym górnym kwadrancie.");
+        addText("ERROR_NO_URL",        "Nie podano adresu URL. Operacja anulowana.");
+        addText("ERROR_QR_GENERATION", "Błąd: Generowanie kodu QR nie powiodło się");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Anuluj");
+    }
+    else if (LANG == "pt") {
+        addText("TITLE",               "Gerador de código QR");
+        addText("SETTINGS_GROUP",      "Configurações do código QR");
+        addText("URL_LABEL",           "Digite a URL para seu código QR:");
+        addText("SIZE_LABEL",          "Digite o tamanho (0.25-5.0 polegadas / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Selecione a camada:");
+        addText("POSITION_NOTE",       "O código QR será automaticamente colocado no quadrante superior esquerdo.");
+        addText("ERROR_NO_URL",        "URL não fornecida. Operação cancelada.");
+        addText("ERROR_QR_GENERATION", "Erro: Falha na geração do código QR");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Cancelar");
+    }
+    else if (LANG == "zh" || LANG == "zh-CN" || LANG == "zh-TW") {
+        addText("TITLE",               "二维码生成器");
+        addText("SETTINGS_GROUP",      "二维码设置");
+        addText("URL_LABEL",           "输入您的二维码URL：");
+        addText("SIZE_LABEL",          "输入尺寸（0.25-5.0英寸 / 250-5000密耳 / 6.35-127毫米）：");
+        addText("LAYER_LABEL",         "选择层：");
+        addText("POSITION_NOTE",       "二维码将自动放置在左上象限。");
+        addText("ERROR_NO_URL",        "未提供URL。操作已取消。");
+        addText("ERROR_QR_GENERATION", "错误：二维码生成失败");
+        addText("BUTTON_OK",           "确定");
+        addText("BUTTON_CANCEL",       "取消");
+    }
+    else if (LANG == "tr") {
+        addText("TITLE",               "QR Kod Üreteci");
+        addText("SETTINGS_GROUP",      "QR Kod Ayarları");
+        addText("URL_LABEL",           "QR kodunuz için URL girin:");
+        addText("SIZE_LABEL",          "Boyutu girin (0.25-5.0 inç / 250-5000 mil / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Katman seçin:");
+        addText("POSITION_NOTE",       "QR kodu otomatik olarak sol üst kadrana yerleştirilecektir.");
+        addText("ERROR_NO_URL",        "URL sağlanmadı. İşlem iptal edildi.");
+        addText("ERROR_QR_GENERATION", "Hata: QR Kod oluşturma başarısız oldu");
+        addText("BUTTON_OK",           "Tamam");
+        addText("BUTTON_CANCEL",       "İptal");
+    }
+    else {
+        addText("TITLE",               "QR Code Generator");
+        addText("SETTINGS_GROUP",      "QR Code Settings");
+        addText("URL_LABEL",           "Enter the URL for your QR code:");
+        addText("SIZE_LABEL",          "Enter size (0.25-5.0 inches / 250-5000 mils / 6.35-127 mm):");
+        addText("LAYER_LABEL",         "Select layer:");
+        addText("POSITION_NOTE",       "The QR code will be automatically placed in the upper-left quadrant.");
+        addText("ERROR_NO_URL",        "No URL provided. Operation cancelled.");
+        addText("ERROR_QR_GENERATION", "Error: QR Code generation failed");
+        addText("BUTTON_OK",           "OK");
+        addText("BUTTON_CANCEL",       "Cancel");
     }
 }
 
@@ -1373,13 +1292,9 @@ void showHelpDialog() {
 }
 
 void main(void) {
-    // Load localized texts first
-    loadLocalizedTexts();
-    
-    // Check for new version / supported status (silent fallback if offline).
-    // The QR code itself is generated locally below.
-    checkVersionAvailability();
-    
+    // Initialize the embedded localization table for the user's language.
+    initLocalizedTexts();
+
     // Initialize variables
     string Url = "";
     int Size = 500;  // Size in mils
@@ -1456,16 +1371,14 @@ void main(void) {
         dlgHBoxLayout {
             dlgVBoxLayout {
                 dlgGroup(getText("SETTINGS_GROUP")) {
-                    dlgLabel(getText("URL_LABEL"));
-                    dlgStringEdit(Url);
-                    dlgSpacing(10);
-                    dlgLabel(getText("SIZE_LABEL"));
-                    dlgHBoxLayout {
-                        dlgRealEdit(displaySize, 0.25, 5000.0);
-                        dlgComboBox(UnitNames, currentUnit) {
-                            // Convert displayed size when unit changes
-                            int tempMils = convertToMils(displaySize, currentUnit);  // Convert current size to mils
-                            displaySize = convertFromMils(tempMils, currentUnit);  // Convert back to new unit
+                    dlgGridLayout {
+                        dlgCell(0, 0, 0, 3) dlgLabel(getText("URL_LABEL"));
+                        dlgCell(1, 0, 1, 3) dlgStringEdit(Url);
+                        dlgCell(2, 0, 2, 3) dlgLabel(getText("SIZE_LABEL"));
+                        dlgCell(3, 0, 3, 1) dlgRealEdit(displaySize, 0.25, 5000.0);
+                        dlgCell(3, 2, 3, 3) dlgComboBox(UnitNames, currentUnit) {
+                            int tempMils = convertToMils(displaySize, currentUnit);
+                            displaySize = convertFromMils(tempMils, currentUnit);
                             dlgRedisplay();
                         }
                     }
@@ -1484,13 +1397,7 @@ void main(void) {
                 }
                 dlgHBoxLayout {
                     string versionText;
-                    if (LATEST_VERSION != "" && versionCompare(LATEST_VERSION, VERSION) > 0) {
-                        // A strictly newer version is available
-                        sprintf(versionText, "v%s (%s available)", VERSION, LATEST_VERSION);
-                    } else {
-                        // Current version is up-to-date or ahead (e.g. dev build)
-                        sprintf(versionText, "v%s", VERSION);
-                    }
+                    sprintf(versionText, "v%s", VERSION);
                     dlgLabel(versionText);
                     dlgStretch(1);
                     dlgPushButton("?") {

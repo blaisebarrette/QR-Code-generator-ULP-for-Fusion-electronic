@@ -1,15 +1,20 @@
 # Version History
 
-## Version 1.2.0 (May 8 2026)
+## Version 1.2.0 (May 9 2026)
 ### New Features
 - Native QR code generation in pure ULP (no Python server required)
-- Fully offline operation: no internet connection needed to generate a QR code
-- Single-file distribution: all the QR engine code lives directly inside `qrcode_generator.ulp` (no extra files to install)
+- Fully offline, fully self-contained operation: no internet connection, no remote calls, no external file imports
+- Localization is now embedded directly inside `qrcode_generator.ulp` (no `localization.csv` download)
+- Single-file distribution: only `qrcode_generator.ulp` is needed at runtime
 - Internal architecture is sectioned (tables / GF(256) / encoding / matrix / public API) and is forward-compatible with future expansion to versions V11-V40 and ECC levels M, Q, H
 
 ### Improvements
 - Removed dependency on the PythonAnywhere QR service for code generation
-- Network failures during version check are now silent (no longer block QR generation)
+- Removed the runtime version-check mechanism: 1.2.0 no longer polls the legacy `versions.csv` system, ensuring the ULP can be safely shipped in environments where outbound network calls are not allowed
+- Removed the helper-shell calls (`curl` / `wscript`) and temporary VBS / CSV files that were used for localization and version download
+
+### Compatibility note
+- The server-side `versions.csv` and `localization.csv` files are still hosted in the repository so that ULP releases earlier than 1.2.0 (which still poll those endpoints) keep working unchanged
 
 ### Limitations of this release
 - Supports byte mode encoding only (covers all URLs and arbitrary text)

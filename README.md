@@ -24,9 +24,8 @@ A User Language Program (ULP) for generating QR codes directly on PCBs and schem
   - Guide
   - Info
 - Customizable size 250-5000 mils (0.25 to 5 inches)
-- Native QR code generation in pure ULP — fully offline, no server, no internet connection required
-- Single-file distribution: only `qrcode_generator.ulp` is needed (plus the optional `qr.ulp` shortcut and the localization/versions CSV files)
-- Automatic version checking and updates notification
+- Native QR code generation in pure ULP — fully offline, fully self-contained, no server, no internet connection, no remote files required
+- Single-file distribution: only `qrcode_generator.ulp` is needed (the optional `qr.ulp` shortcut is also provided for convenience)
 - Multi-language support:
   - English
   - French
@@ -98,15 +97,17 @@ Here is a comparison between QR codes of different sizes, generated from long (l
 - Architecture is forward-compatible with future versions V11-V40 and ECC levels M, Q, H
 - Minimum size: 250 mils (0.25 inch / 6.25 mm)
 - Maximum size: 5000 mils (5 inch / 127 mm)
-- Version checking ensures compatibility
 - Automatic mirroring for bottom layers
-- Language selection based on system settings
+- Language selection based on system settings (with English fallback)
+
+## Backwards compatibility
+
+Version 1.2.0 no longer uses the legacy `versions.csv` version-check mechanism. Older ULP releases (< 1.2.0) still query the server-hosted `versions.csv` and `localization.csv` files, and these files remain available in the repository so those installations keep working unchanged.
 
 ## Error Handling
 
 The ULP includes comprehensive error handling for:
 - URLs too long for the supported QR versions
-- Version compatibility (legacy versions can be flagged as unsupported via `versions.csv`)
 - File operations
 
 ## Contributing
